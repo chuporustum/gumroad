@@ -3,6 +3,7 @@ import * as React from "react";
 import { Link, useLoaderData, useNavigate, useRevalidator } from "react-router-dom";
 import { cast } from "ts-safe-cast";
 
+import { getSegments, type Segment } from "$app/data/segments";
 import {
   WorkflowFormContext,
   Workflow,
@@ -84,12 +85,15 @@ type WorkflowFormState = {
   afterDate: string;
   beforeDate: string;
   fromCountry: string;
+  selectedSegments: string[];
+  useSegments: boolean;
 };
 const WorkflowForm = () => {
   const navigate = useNavigate();
   const { context, workflow } = cast<{ context: WorkflowFormContext; workflow?: Workflow }>(useLoaderData());
   const loaderDataRevalidator = useRevalidator();
   const wasPublishedPreviously = !!workflow?.first_published_at;
+  const [segments, setSegments] = React.useState<Segment[]>([]);
   const [formState, setFormState] = React.useState<WorkflowFormState>(() => {
     if (!workflow)
       return {
@@ -104,6 +108,8 @@ const WorkflowForm = () => {
         afterDate: "",
         beforeDate: "",
         fromCountry: "",
+        selectedSegments: [],
+        useSegments: false,
       };
 
     const bought =
@@ -124,6 +130,8 @@ const WorkflowForm = () => {
       afterDate: workflow.created_after ?? "",
       beforeDate: workflow.created_before ?? "",
       fromCountry: workflow.bought_from ?? "",
+      selectedSegments: workflow.segments?.map((s) => s.id.toString() || "") || [],
+      useSegments: (workflow.segments?.length || 0) > 0,
     };
   });
   const [isSaving, setIsSaving] = React.useState(false);
@@ -141,6 +149,19 @@ const WorkflowForm = () => {
   const triggerSupportsDateFilters = formState.trigger !== "abandoned_cart";
   const triggerSupportsPaidFilters = formState.trigger === "purchase" || formState.trigger === "member_cancels";
   const triggerSupportsFromCountryFilter = formState.trigger === "purchase" || formState.trigger === "member_cancels";
+
+  // Fetch segments on component mount
+  React.useEffect(() => {
+    const fetchSegments = async () => {
+      try {
+        const data = await getSegments();
+        setSegments(data.segments);
+      } catch (e) {
+        console.error("Failed to fetch segments:", e);
+      }
+    };
+    fetchSegments();
+  }, []);
 
   const updateFormState = (value: Partial<WorkflowFormState>) => {
     const updatedInvalidFields = new Set(invalidFields);
@@ -237,18 +258,25 @@ const WorkflowForm = () => {
       name: formState.name,
       workflow_type: workflowType,
       workflow_trigger: workflowTrigger,
-      bought_products: bought.productIds,
-      bought_variants: bought.variantIds,
-      variant_external_id: variantId,
-      permalink: productPermalink,
-      not_bought_products: notBought.productIds,
-      not_bought_variants: notBought.variantIds,
-      paid_more_than: triggerSupportsPaidFilters ? formState.paidMoreThan : null,
-      paid_less_than: triggerSupportsPaidFilters ? formState.paidLessThan : null,
-      created_after: triggerSupportsDateFilters ? formState.afterDate : "",
-      created_before: triggerSupportsDateFilters ? formState.beforeDate : "",
-      bought_from: triggerSupportsFromCountryFilter ? formState.fromCountry : null,
-      affiliate_products: formState.trigger === "new_affiliate" ? formState.affiliatedProducts : [],
+      bought_products: formState.useSegments ? [] : bought.productIds,
+      bought_variants: formState.useSegments ? [] : bought.variantIds,
+      variant_external_id: formState.useSegments ? null : variantId,
+      permalink: formState.useSegments ? null : productPermalink,
+      not_bought_products: formState.useSegments ? [] : notBought.productIds,
+      not_bought_variants: formState.useSegments ? [] : notBought.variantIds,
+      paid_more_than: formState.useSegments ? null : triggerSupportsPaidFilters ? formState.paidMoreThan : null,
+      paid_less_than: formState.useSegments ? null : triggerSupportsPaidFilters ? formState.paidLessThan : null,
+      created_after: formState.useSegments ? "" : triggerSupportsDateFilters ? formState.afterDate : "",
+      created_before: formState.useSegments ? "" : triggerSupportsDateFilters ? formState.beforeDate : "",
+      bought_from: formState.useSegments ? null : triggerSupportsFromCountryFilter ? formState.fromCountry : null,
+      affiliate_products: formState.useSegments
+        ? []
+        : formState.trigger === "new_affiliate"
+          ? formState.affiliatedProducts
+          : [],
+      segment_ids: formState.useSegments
+        ? formState.selectedSegments.map((id) => parseInt(id, 10)).filter((id) => !isNaN(id))
+        : [],
       send_to_past_customers: formState.sendToPastCustomers,
       save_action_name: saveActionName,
     };
@@ -650,6 +678,83 @@ const WorkflowForm = () => {
               </select>
             </fieldset>
           ) : null}
+
+          {/* Segment Selection */}
+          <fieldset>
+            <legend>Audience targeting</legend>
+            <label>
+              <input
+                type="radio"
+                checked={!formState.useSegments}
+                onChange={() => updateFormState({ useSegments: false, selectedSegments: [] })}
+                disabled={wasPublishedPreviously}
+              />
+              Use filter criteria above
+            </label>
+            <label>
+              <input
+                type="radio"
+                checked={formState.useSegments}
+                onChange={() => updateFormState({ useSegments: true })}
+                disabled={wasPublishedPreviously}
+              />
+              Use saved segments
+            </label>
+            {formState.useSegments ? (
+              <div style={{ marginTop: "var(--spacer-3)" }}>
+                <fieldset>
+                  <legend>
+                    <label htmlFor="segments">Select segments</label>
+                  </legend>
+                  <TagInput
+                    inputId="segments"
+                    placeholder="Select segments..."
+                    isDisabled={wasPublishedPreviously}
+                    tagIds={formState.selectedSegments}
+                    tagList={segments.map((segment) => ({
+                      id: segment.id?.toString() || "",
+                      label: segment.name,
+                    }))}
+                    onChangeTagIds={(selectedSegments) => updateFormState({ selectedSegments })}
+                    noTagsLeftLabel="No segments available"
+                    noMatchingTagsLabel={(query) => `No segments match "${query}"`}
+                  />
+                  {segments.length === 0 ? (
+                    <small style={{ color: "var(--color-text-secondary)" }}>
+                      No segments available. <Link to="/emails/segments">Create segments</Link> to use this feature.
+                    </small>
+                  ) : formState.selectedSegments.length > 0 ? (
+                    <div>
+                      <small
+                        style={{
+                          color: "var(--color-text-secondary)",
+                          marginBottom: "var(--spacer-2)",
+                          display: "block",
+                        }}
+                      >
+                        {formState.selectedSegments.length} segment{formState.selectedSegments.length === 1 ? "" : "s"}{" "}
+                        selected:
+                      </small>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--spacer-1)" }}>
+                        {formState.selectedSegments.map((segmentId) => {
+                          const segment = segments.find((s) => String(s.id) === segmentId);
+                          return segment ? (
+                            <span key={segmentId} className="pill small primary">
+                              {segment.name}
+                            </span>
+                          ) : null;
+                        })}
+                      </div>
+                    </div>
+                  ) : (
+                    <small style={{ color: "var(--color-text-secondary)" }}>
+                      {segments.length} segment{segments.length === 1 ? "" : "s"} available
+                    </small>
+                  )}
+                </fieldset>
+              </div>
+            ) : null}
+          </fieldset>
         </section>
       </form>
     </Layout>

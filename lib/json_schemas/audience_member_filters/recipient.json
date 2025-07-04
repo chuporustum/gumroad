@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "type": "object",
+  "properties": {
+    "operator": {
+      "type": "string",
+      "enum": ["is", "is_not"]
+    },
+    "type": {
+      "type": "string",
+      "enum": ["customer", "subscriber", "affiliate", "everyone"]
+    }
+  },
+  "required": ["operator", "type"],
+  "additionalProperties": false
+}

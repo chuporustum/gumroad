@@ -15,14 +15,16 @@ class InstallmentPresenter
   def props
     attrs = {
       name: installment.displayed_name,
-      message: installment.message,
+      message: installment.message || "",
+      preheader: installment.preheader || "",
+      internal_tag: installment.internal_tag || "",
       files: installment.alive_product_files.map(&:as_json),
       published_at: installment.published_at,
       updated_at: installment.updated_at,
       external_id: installment.external_id,
       stream_only: installment.has_stream_only_files?,
-      call_to_action_text: installment.call_to_action_text,
-      call_to_action_url: installment.call_to_action_url,
+      call_to_action_text: installment.call_to_action_text || "",
+      call_to_action_url: installment.call_to_action_url || "",
       streamable: installment.streamable?,
       sent_count: installment.customer_count,
       click_count: installment.unique_click_count,
@@ -31,16 +33,16 @@ class InstallmentPresenter
       open_rate: installment.open_rate_percent&.round(1),
       send_emails: installment.send_emails?,
       shown_on_profile: installment.shown_on_profile?,
-      installment_type: installment.installment_type,
+      installment_type: installment.installment_type || "",
       paid_more_than_cents: installment.paid_more_than_cents,
       paid_less_than_cents: installment.paid_less_than_cents,
       allow_comments: installment.allow_comments?,
-
+      segment_ids: installment.segment_ids,
     }
 
     attrs.merge!(installment.json_filters)
     if installment.product_type? || installment.variant_type?
-      attrs[:unique_permalink] = installment.link.unique_permalink
+      attrs[:unique_permalink] = installment.link.unique_permalink || ""
       attrs[:variant_external_id] = installment.base_variant.external_id if installment.variant_type?
     end
 
@@ -62,13 +64,13 @@ class InstallmentPresenter
           }
         end,
         view_count: installment.shown_on_profile? ? installment.installment_events_count : nil,
-        full_url: installment.full_url,
+        full_url: installment.full_url || "",
         has_been_blasted: installment.has_been_blasted?,
         shown_in_profile_sections: seller.seller_profile_posts_sections.filter_map { _1.external_id if _1.shown_posts.include?(installment.id) },
       )
 
       unless installment.published?
-        attrs[:recipient_description] = recipient_description
+        attrs[:recipient_description] = recipient_description || ""
         attrs[:to_be_published_at] = installment.installment_rule.to_be_published_at if installment.ready_to_publish?
       end
     end

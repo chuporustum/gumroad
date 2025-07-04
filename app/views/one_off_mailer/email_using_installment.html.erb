@@ -1,4 +1,8 @@
+<% if @installment.preheader.present? %>
+<div style="display:none; font-size:1px; color:#ffffff; line-height:1px; max-height:0px; max-width:0px; opacity:0; overflow:hidden;"><%= @installment.preheader %></div>
+<% else %>
 <%= render("shared/preheader_text", text: @installment.truncated_description) %>
+<% end %>
 <%= header_section(post_title_displayable(post: @installment)) %>
 <div class="rich-text">
   <%= raw Rinku.auto_link(@installment.message_with_inline_syntax_highlighting_and_upsells&.html_safe, :all, 'target="_blank" rel="nofollow"') %>

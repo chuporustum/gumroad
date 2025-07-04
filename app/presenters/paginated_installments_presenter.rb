@@ -30,7 +30,7 @@ class PaginatedInstallmentsPresenter
         exclude_workflow_installments: true,
         seller:,
         q: query,
-        fields: %w[name message],
+        fields: %w[name message internal_tag],
         from: offset,
         size: PER_PAGE,
         sort: [:_score, { created_at: :desc }, { id: :desc }]

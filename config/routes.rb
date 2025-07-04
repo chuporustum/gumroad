@@ -632,8 +632,8 @@ Rails.application.routes.draw do
     resources :product_review_responses, only: [:update, :destroy], format: :json
     resources :product_review_videos, only: [] do
       scope module: :product_review_videos do
-        resource :stream, only: [:show]
-        resources :streaming_urls, only: [:index]
+        resources :approvals, only: [:create]
+        resources :rejections, only: [:create]
       end
     end
     namespace :product_review_videos do
@@ -928,6 +928,13 @@ Rails.application.routes.draw do
           scope module: :product_review_videos do
             resources :approvals, only: [:create]
             resources :rejections, only: [:create]
+          end
+        end
+
+        resources :segments, only: [:index, :show, :create, :update, :destroy] do
+          collection do
+            post :preview
+            post :generate_with_ai
           end
         end
       end

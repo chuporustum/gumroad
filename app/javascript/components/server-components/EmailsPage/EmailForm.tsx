@@ -14,6 +14,7 @@ import {
   createInstallment,
   updateInstallment,
 } from "$app/data/installments";
+import { getSegments, type Segment } from "$app/data/segments";
 import { assertDefined } from "$app/utils/assert";
 import Countdown from "$app/utils/countdown";
 import { ALLOWED_EXTENSIONS } from "$app/utils/file";
@@ -178,6 +179,9 @@ export const EmailForm = () => {
   const { context, installment } = cast<{ context: InstallmentFormContext; installment: Installment | null }>(
     useLoaderData(),
   );
+  const [segments, setSegments] = React.useState<Segment[]>([]);
+  const [useSegments, setUseSegments] = React.useState(!!installment?.segment_ids?.length);
+  const [selectedSegments, setSelectedSegments] = React.useState<string[]>(installment?.segment_ids?.map(String) ?? []);
   const hasAudience = context.audience_types.length > 0;
   const [audienceType, setAudienceType] = React.useState<AudienceType>(
     installment ? getAudienceType(installment.installment_type) : "everyone",
@@ -222,6 +226,8 @@ export const EmailForm = () => {
     installment?.allow_comments ?? context.allow_comments_by_default,
   );
   const [title, setTitle] = React.useState(installment?.name ?? "");
+  const [preheader, setPreheader] = React.useState(installment?.preheader ?? "");
+  const [internalTag, setInternalTag] = React.useState(installment?.internal_tag ?? "");
   const [publishDate, setPublishDate] = React.useState(toISODateString(installment?.published_at));
   React.useEffect(() => setPublishDate(toISODateString(installment?.published_at)), [installment]);
   const [message, setMessage] = React.useState(installment?.message ?? "");
@@ -449,10 +455,11 @@ export const EmailForm = () => {
       audienceType === "customers" || audienceType === "followers" ? boughtVariants.map(({ id }) => id) : null,
     not_bought_products: audienceType === "affiliates" ? null : notBoughtProducts.map(({ id }) => id),
     not_bought_variants: audienceType === "affiliates" ? null : notBoughtVariants.map(({ id }) => id),
-    affiliate_products: audienceType === "affiliates" ? affiliatedProducts : null,
+    affiliate_products: useSegments ? null : audienceType === "affiliates" ? affiliatedProducts : null,
     send_emails: channel.email,
     shown_on_profile: channel.profile,
     allow_comments: allowComments,
+    segment_ids: useSegments ? selectedSegments.map(Number) : [],
   };
   React.useEffect(() => {
     setRecipientCount((prev) => ({ ...prev, loading: true }));
@@ -476,6 +483,20 @@ export const EmailForm = () => {
       }
     })();
   }, [JSON.stringify(filtersPayload)]);
+
+  React.useEffect(() => {
+    const fetchSegments = async () => {
+      try {
+        const data = await getSegments();
+        setSegments(data.segments);
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.error("Failed to fetch segments:", e);
+      }
+    };
+    fetchSegments();
+  }, []);
+
   const isPublished = !!(installment?.external_id && installment.published_at);
 
   const validate = (action: SaveAction) => {
@@ -553,6 +574,8 @@ export const EmailForm = () => {
       installment: {
         name: title,
         message,
+        preheader,
+        internal_tag: internalTag,
         files: files.map((file, position) => ({
           external_id: file.id,
           position,
@@ -806,6 +829,85 @@ export const EmailForm = () => {
               </fieldset>
             </div>
             <div>
+              <fieldset>
+                <legend>Audience Targeting</legend>
+                <label>
+                  <input
+                    type="radio"
+                    checked={!useSegments}
+                    onChange={() => {
+                      setUseSegments(false);
+                      setSelectedSegments([]);
+                    }}
+                    disabled={isPublished}
+                  />
+                  Use filter criteria
+                </label>
+                <label>
+                  <input
+                    type="radio"
+                    checked={useSegments}
+                    onChange={() => setUseSegments(true)}
+                    disabled={isPublished}
+                  />
+                  Use saved segments
+                </label>
+              </fieldset>
+              {useSegments ? (
+                <div style={{ marginTop: "var(--spacer-3)" }}>
+                  <fieldset>
+                    <legend>
+                      <label htmlFor={`${uid}-segments`}>Select segments</label>
+                    </legend>
+                    <TagInput
+                      inputId={`${uid}-segments`}
+                      placeholder="Select segments..."
+                      tagIds={selectedSegments}
+                      tagList={segments.map((s) => ({
+                        id: String(s.id),
+                        label: s.name,
+                      }))}
+                      onChangeTagIds={setSelectedSegments}
+                      isDisabled={isPublished}
+                      noTagsLeftLabel="No segments available"
+                      noMatchingTagsLabel={(query) => `No segments match "${query}"`}
+                    />
+                    {segments.length === 0 ? (
+                      <small style={{ color: "var(--color-text-secondary)" }}>
+                        No segments available. Create segments first to use this feature.
+                      </small>
+                    ) : selectedSegments.length > 0 ? (
+                      <div>
+                        <small
+                          style={{
+                            color: "var(--color-text-secondary)",
+                            marginBottom: "var(--spacer-2)",
+                            display: "block",
+                          }}
+                        >
+                          {selectedSegments.length} segment{selectedSegments.length === 1 ? "" : "s"} selected:
+                        </small>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--spacer-1)" }}>
+                          {selectedSegments.map((segmentId) => {
+                            const segment = segments.find((s) => String(s.id) === segmentId);
+                            return segment ? (
+                              <span key={segmentId} className="pill small primary">
+                                {segment.name}
+                              </span>
+                            ) : null;
+                          })}
+                        </div>
+                      </div>
+                    ) : (
+                      <small style={{ color: "var(--color-text-secondary)" }}>
+                        {segments.length} segment{segments.length === 1 ? "" : "s"} available
+                      </small>
+                    )}
+                  </fieldset>
+                </div>
+              ) : null}
+            </div>
+            <div style={{ display: useSegments ? "none" : "block" }}>
               <fieldset role="group" className={cx({ danger: invalidFields.has("channel") })}>
                 <legend>Channel</legend>
                 {hasAudience ? (
@@ -1067,7 +1169,7 @@ export const EmailForm = () => {
                 </fieldset>
               </div>
             ) : null}
-            <div>
+            <div style={{ display: useSegments ? "none" : "block" }}>
               <fieldset role="group">
                 <legend>Engagement</legend>
                 <label htmlFor={`${uid}-allow_comments`}>
@@ -1096,6 +1198,24 @@ export const EmailForm = () => {
                       setTitle(e.target.value);
                       markFieldAsValid("title");
                     }}
+                  />
+                </fieldset>
+                <fieldset>
+                  <input
+                    type="text"
+                    placeholder="Preview text that appears in email clients..."
+                    maxLength={255}
+                    value={preheader}
+                    onChange={(e) => setPreheader(e.target.value)}
+                  />
+                </fieldset>
+                <fieldset>
+                  <input
+                    type="text"
+                    placeholder="Internal tag for organization..."
+                    maxLength={255}
+                    value={internalTag}
+                    onChange={(e) => setInternalTag(e.target.value)}
                   />
                 </fieldset>
                 {isPublished ? (

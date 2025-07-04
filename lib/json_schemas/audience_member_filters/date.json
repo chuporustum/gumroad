@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "type": "object",
+  "properties": {
+    "operator": {
+      "type": "string",
+      "enum": ["is_after", "is_before", "between"]
+    },
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date"
+    }
+  },
+  "required": ["operator"],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "operator": {
+            "enum": ["is_after", "is_before"]
+          }
+        }
+      },
+      "then": {
+        "required": ["date"]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "operator": {
+            "const": "between"
+          }
+        }
+      },
+      "then": {
+        "required": ["start_date", "end_date"]
+      }
+    }
+  ],
+  "additionalProperties": false
+}

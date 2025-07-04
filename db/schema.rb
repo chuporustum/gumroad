@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_04_25_212934) do
+ActiveRecord::Schema[7.1].define(version: 2025_07_02_144518) do
   create_table "active_storage_attachments", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.string "name", limit: 191, null: false
     t.string "record_type", limit: 191, null: false
@@ -144,6 +144,33 @@ ActiveRecord::Schema[7.1].define(version: 2025_04_25_212934) do
     t.string "unsplash_url"
     t.index ["deleted_at"], name: "index_asset_previews_on_deleted_at"
     t.index ["link_id"], name: "index_asset_previews_on_link_id"
+  end
+
+  create_table "audience_member_filter_groups", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "name"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "filterable_type"
+    t.bigint "filterable_id"
+    t.index ["filterable_type", "filterable_id"], name: "idx_on_filterable_type_filterable_id_7916163b4f"
+    t.index ["filterable_type", "filterable_id"], name: "index_audience_member_filter_groups_on_filterable"
+    t.index ["user_id", "id"], name: "index_audience_member_filter_groups_on_user_id_and_id"
+    t.index ["user_id"], name: "index_audience_member_filter_groups_on_user_id"
+  end
+
+  create_table "audience_member_filters", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "filter_type", null: false
+    t.json "config", null: false
+    t.bigint "audience_member_filter_group_id", null: false
+    t.integer "lock_version", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["audience_member_filter_group_id"], name: "idx_on_audience_member_filter_group_id_7e819557f8"
+    t.index ["audience_member_filter_group_id"], name: "index_audience_member_filters_on_filter_group_id"
+    t.index ["user_id", "filter_type"], name: "index_audience_member_filters_on_user_id_and_filter_type"
+    t.index ["user_id"], name: "index_audience_member_filters_on_user_id"
   end
 
   create_table "audience_members", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
@@ -960,6 +987,15 @@ ActiveRecord::Schema[7.1].define(version: 2025_04_25_212934) do
     t.index ["installment_id"], name: "index_installment_rules_on_installment_id", unique: true
   end
 
+  create_table "installment_segment_joins", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.integer "installment_id", null: false
+    t.bigint "segment_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["installment_id", "segment_id"], name: "idx_on_installment_id_segment_id_ba6ddec7a7", unique: true
+    t.index ["segment_id"], name: "index_installment_segment_joins_on_segment_id"
+  end
+
   create_table "installments", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.integer "link_id"
     t.text "message", size: :long
@@ -981,6 +1017,8 @@ ActiveRecord::Schema[7.1].define(version: 2025_04_25_212934) do
     t.integer "base_variant_id"
     t.string "slug"
     t.integer "installment_events_count", default: 0
+    t.string "preheader"
+    t.string "internal_tag"
     t.index ["base_variant_id"], name: "index_installments_on_base_variant_id"
     t.index ["created_at"], name: "index_installments_on_created_at"
     t.index ["link_id"], name: "index_installments_on_link_id"
@@ -1892,6 +1930,16 @@ ActiveRecord::Schema[7.1].define(version: 2025_04_25_212934) do
     t.index ["smaller_product_id", "sales_count"], name: "index_smaller_product_id_and_sales_count"
   end
 
+  create_table "segments", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "name"
+    t.text "description"
+    t.json "with_filtering"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_segments_on_user_id"
+  end
+
   create_table "self_service_affiliate_products", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.bigint "seller_id", null: false
     t.bigint "product_id", null: false
@@ -2667,6 +2715,15 @@ ActiveRecord::Schema[7.1].define(version: 2025_04_25_212934) do
     t.index ["user_id"], name: "index_wishlists_on_user_id"
   end
 
+  create_table "workflow_segment_joins", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
+    t.integer "workflow_id", null: false
+    t.bigint "segment_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["segment_id"], name: "index_workflow_segment_joins_on_segment_id"
+    t.index ["workflow_id", "segment_id"], name: "index_workflow_segment_joins_on_workflow_id_and_segment_id", unique: true
+  end
+
   create_table "workflows", id: :integer, charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.string "name", limit: 1024
     t.integer "seller_id"
@@ -2717,4 +2774,12 @@ ActiveRecord::Schema[7.1].define(version: 2025_04_25_212934) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "audience_member_filter_groups", "users"
+  add_foreign_key "audience_member_filters", "audience_member_filter_groups"
+  add_foreign_key "audience_member_filters", "users"
+  add_foreign_key "installment_segment_joins", "installments"
+  add_foreign_key "installment_segment_joins", "segments"
+  add_foreign_key "segments", "users"
+  add_foreign_key "workflow_segment_joins", "segments"
+  add_foreign_key "workflow_segment_joins", "workflows"
 end
