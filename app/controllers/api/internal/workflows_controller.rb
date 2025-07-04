@@ -88,7 +88,7 @@ class Api::Internal::WorkflowsController < Api::Internal::BaseController
         :created_after, :created_before, :permalink,
         :send_to_past_customers, :save_action_name,
         bought_products: [], not_bought_products: [], affiliate_products: [],
-        bought_variants: [], not_bought_variants: [],
+        bought_variants: [], not_bought_variants: [], segment_ids: [],
       )
     end
 

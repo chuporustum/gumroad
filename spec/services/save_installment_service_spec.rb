@@ -21,6 +21,7 @@ describe SaveInstallmentService do
         link_id: product.unique_permalink,
         message: "<p>Hello, world!</p>",
         name: "Hello",
+        preheader: "Preview text for email clients",
         not_bought_products: [],
         not_bought_variants: [],
         paid_less_than_cents: 2000,
@@ -73,6 +74,7 @@ describe SaveInstallmentService do
       expect(service.installment).to eq(installment)
       expect(installment.seller).to eq(seller)
       expect(installment.name).to eq("Hello")
+      expect(installment.preheader).to eq("Preview text for email clients")
       expect(installment.product_type?).to be(true)
       expect(installment.link).to eq(product)
       expect(installment.bought_from).to eq("United States")

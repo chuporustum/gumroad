@@ -57,6 +57,11 @@ class WorkflowPresenter
       props[:seller_has_products] = seller.links.visible_and_not_archived.exists?
     end
 
+    # Add segments if they exist
+    if workflow.respond_to?(:segments) && workflow.segments.any?
+      props[:segments] = workflow.segments.map { |segment| { id: segment.id, name: segment.name } }
+    end
+
     props
   end
 

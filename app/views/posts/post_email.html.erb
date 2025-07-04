@@ -12,7 +12,11 @@ Do not include route helpers (`root_url`), because the URL options (e.g. the hos
   <body>
     <div class="email post">
       <div class="main">
-        <%= render("shared/preheader_text", text: CGI.unescapeHTML(@post.truncated_description)) %>
+        <% if @post.preheader.present? %>
+          <div style="display:none; font-size:1px; color:#ffffff; line-height:1px; max-height:0px; max-width:0px; opacity:0; overflow:hidden;"><%= @post.preheader %></div>
+        <% else %>
+          <%= render("shared/preheader_text", text: CGI.unescapeHTML(@post.truncated_description)) %>
+        <% end %>
         <% if @has_post_url %>
           <%= header_section(post_title_displayable(post: @post, url: "{{post_url}}")) %>
         <% else %>

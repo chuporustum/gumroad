@@ -25,6 +25,11 @@ module WithFiltering
     attr_json_data_accessor :not_bought_variants
     attr_json_data_accessor :affiliate_products
 
+    # Associations for new filtering system
+    has_many :audience_member_filter_groups, as: :filterable, dependent: :destroy if self.name.in?(['Installment', 'Workflow'])
+    has_many :segment_joins, class_name: "#{self.name}SegmentJoin", dependent: :destroy if self.name.in?(['Installment', 'Workflow'])
+    has_many :segments, through: :segment_joins if self.name.in?(['Installment', 'Workflow'])
+
     # Name of the column containing the recipient type.
     # i.e. "installment_type" (Installment) and "workflow_type" (Workflow)
     mattr_reader :recipient_type_column, default: "#{model_name.singular}_type"
@@ -53,9 +58,126 @@ module WithFiltering
   def product_or_variant_type? = product_type? || variant_type?
   def seller_or_product_or_variant_type? = seller_type? || product_or_variant_type?
 
+  # New method to get audience member ids using the new filtering system
+  def filtered_audience_member_ids
+    return [] unless respond_to?(:audience_member_filter_groups) && respond_to?(:segments)
+    
+    user_id = seller.id
+    audience_member_ids = Set.new
+    
+    # Apply filter groups directly attached to this model (AND logic)
+    audience_member_filter_groups.each do |filter_group|
+      ids = filter_group.filter(user_id).pluck(:id)
+      if audience_member_ids.empty?
+        audience_member_ids = Set.new(ids)
+      else
+        audience_member_ids &= ids  # Intersection (AND)
+      end
+    end
+    
+    # Apply segments (OR logic with existing filter groups)
+    segment_audience_ids = Set.new
+    segments.each do |segment|
+      segment_audience_ids |= segment.filter(user_id).pluck(:id)  # Union (OR)
+    end
+    
+    # Combine direct filter groups and segments with OR logic
+    if audience_member_ids.any? && segment_audience_ids.any?
+      audience_member_ids |= segment_audience_ids
+    elsif segment_audience_ids.any?
+      audience_member_ids = segment_audience_ids
+    end
+    
+    audience_member_ids.to_a
+  end
+
+  # Enhanced filtering methods that check new system first, then fall back to JSON
+  def uses_new_filtering_system?
+    respond_to?(:audience_member_filter_groups) && 
+    (audience_member_filter_groups.any? || segments.any?)
+  end
+
+  def enhanced_purchase_passes_filters(purchase)
+    if uses_new_filtering_system?
+      # Check if the purchase's buyer is in our filtered audience
+      audience_member = AudienceMember.find_by(seller_id: seller.id, email: purchase.email)
+      return false unless audience_member
+      
+      filtered_ids = filtered_audience_member_ids
+      return false if filtered_ids.empty?
+      
+      filtered_ids.include?(audience_member.id)
+    else
+      # Fall back to existing JSON-based filtering
+      purchase_passes_filters(purchase)
+    end
+  end
+
+  def enhanced_affiliate_passes_filters(affiliate)
+    if uses_new_filtering_system?
+      # For affiliates, we'd need to check if they exist in audience members
+      audience_member = AudienceMember.find_by(seller_id: seller.id, email: affiliate.affiliate_user.email, affiliate: true)
+      return false unless audience_member
+      
+      filtered_ids = filtered_audience_member_ids
+      return false if filtered_ids.empty?
+      
+      filtered_ids.include?(audience_member.id)
+    else
+      # Fall back to existing JSON-based filtering
+      affiliate_passes_filters(affiliate)
+    end
+  end
+
+  def enhanced_follower_passes_filters(follower)
+    if uses_new_filtering_system?
+      # For followers, we'd need to check if they exist in audience members
+      audience_member = AudienceMember.find_by(seller_id: seller.id, email: follower.email, follower: true)
+      return false unless audience_member
+      
+      filtered_ids = filtered_audience_member_ids
+      return false if filtered_ids.empty?
+      
+      filtered_ids.include?(audience_member.id)
+    else
+      # Fall back to existing JSON-based filtering
+      follower_passes_filters(follower)
+    end
+  end
+
   def add_and_validate_filters(params, user)
     currency = user.currency_type
 
+    # Handle segment associations for new filtering system
+    if respond_to?(:segments) && params[:segment_ids].present?
+      segment_ids = Array.wrap(params[:segment_ids]).compact.map(&:to_i)
+      user_segments = user.segments.where(id: segment_ids)
+      
+      if user_segments.count != segment_ids.count
+        errors.add(:base, "One or more selected segments could not be found.")
+        return false
+      end
+      
+      # Clear existing segment associations and set new ones
+      self.segments = user_segments
+      
+      # When using segments, clear traditional filter fields to avoid conflicts
+      self.bought_products = []
+      self.not_bought_products = []
+      self.bought_variants = []
+      self.not_bought_variants = []
+      self.affiliate_products = []
+      self.paid_more_than_cents = nil
+      self.paid_less_than_cents = nil
+      self.created_after = nil
+      self.created_before = nil
+      self.bought_from = nil
+      self.workflow_trigger = nil
+      
+      return true
+    end
+
+    # Traditional filter handling (when not using segments)
     self.paid_more_than_cents = if seller_or_product_or_variant_type?
       if params[:paid_more_than_cents].present?
         params[:paid_more_than_cents]

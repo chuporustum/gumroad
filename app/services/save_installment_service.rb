@@ -127,11 +127,12 @@ class SaveInstallmentService
     end
 
     def installment_params
-      params.require(:installment).permit(:name, :message, :installment_type, :link_id,
+      params.require(:installment).permit(:name, :message, :preheader, :internal_tag, :installment_type, :link_id,
                                           :paid_more_than_cents, :paid_less_than_cents, :created_after, :created_before,
                                           :bought_from, :shown_on_profile, :send_emails, :allow_comments,
                                           bought_products: [], bought_variants: [], affiliate_products: [],
-                                          not_bought_products: [], not_bought_variants: [], shown_in_profile_sections: [])
+                                          not_bought_products: [], not_bought_variants: [], shown_in_profile_sections: [],
+                                          segment_ids: [])
     end
 
     def installment_attrs
@@ -139,7 +140,7 @@ class SaveInstallmentService
     end
 
     def published_installment_params
-      allowed_params = [:name, :message, :shown_on_profile, :allow_comments]
+      allowed_params = [:name, :message, :preheader, :internal_tag, :shown_on_profile, :allow_comments]
       allowed_params << :send_emails unless installment.has_been_blasted?
       published_at = params[:installment][:published_at]
       allowed_params << :published_at if published_at.present? && installment.published_at.to_date.to_s != DateTime.parse(published_at).to_date.to_s

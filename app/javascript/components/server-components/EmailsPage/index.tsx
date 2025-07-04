@@ -12,6 +12,7 @@ import {
   previewInstallment,
   SavedInstallment,
 } from "$app/data/installments";
+import { getSegment } from "$app/data/segments";
 import { assertDefined } from "$app/utils/assert";
 import { formatStatNumber } from "$app/utils/formatStatNumber";
 import { asyncVoid } from "$app/utils/promise";
@@ -24,15 +25,20 @@ import { Popover } from "$app/components/Popover";
 import { showAlert } from "$app/components/server-components/Alert";
 import { DraftsTab } from "$app/components/server-components/EmailsPage/DraftsTab";
 import { EmailForm } from "$app/components/server-components/EmailsPage/EmailForm";
+import { NewSegmentPage } from "$app/components/server-components/EmailsPage/NewSegmentPage";
 import { PublishedTab } from "$app/components/server-components/EmailsPage/PublishedTab";
 import { ScheduledTab } from "$app/components/server-components/EmailsPage/ScheduledTab";
+import { SegmentEditPage } from "$app/components/server-components/EmailsPage/SegmentEditPage";
+import { SegmentsTab } from "$app/components/server-components/EmailsPage/SegmentsTab";
 import { WithTooltip } from "$app/components/WithTooltip";
 
-const TABS = ["published", "scheduled", "drafts", "subscribers"] as const;
+const TABS = ["published", "scheduled", "drafts", "segments", "subscribers"] as const;
 
 export const emailTabPath = (tab: (typeof TABS)[number]) => `/emails/${tab}`;
 export const newEmailPath = "/emails/new";
 export const editEmailPath = (id: string) => `/emails/${id}/edit`;
+export const editSegmentPath = (id: string) => `/emails/segments/${id}/edit`;
+export const newSegmentPath = "/emails/segments/new";
 
 export const Layout = ({
   selectedTab,
@@ -78,7 +84,7 @@ export const Layout = ({
             </div>
           </Popover>
 
-          <NewEmailButton />
+          {selectedTab === "segments" ? <NewSegmentButton /> : <NewEmailButton />}
         </div>
 
         <div role="tablist">
@@ -89,7 +95,16 @@ export const Layout = ({
               </a>
             ) : (
               <Link to={emailTabPath(tab)} role="tab" aria-selected={selectedTab === tab} key={tab}>
-                {tab === "published" ? "Published" : tab === "scheduled" ? "Scheduled" : "Drafts"}
+                {tab === "published"
+                  ? "Published"
+                  : tab === "scheduled"
+                    ? "Scheduled"
+                    : tab === "drafts"
+                      ? "Drafts"
+                      : // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+                        tab === "segments"
+                        ? "Segments"
+                        : tab}
               </Link>
             ),
           )}
@@ -109,6 +124,16 @@ export const NewEmailButton = ({ copyFrom }: { copyFrom?: string }) => {
       state={{ from }}
     >
       {copyFrom ? "Duplicate" : "New email"}
+    </Link>
+  );
+};
+
+export const NewSegmentButton = () => {
+  const { pathname: from } = useLocation();
+  return (
+    <Link className={cx("button", "accent")} to={newSegmentPath} state={{ from }}>
+      <Icon name="plus" />
+      New segment
     </Link>
   );
 };
@@ -196,6 +221,18 @@ const routes: RouteObject[] = [
     loader: async () => json(await getDraftInstallments({ page: 1, query: "" }).response, { status: 200 }),
   },
   {
+    path: emailTabPath("segments"),
+    element: <SegmentsTab />,
+  },
+  {
+    path: editSegmentPath(":id"),
+    element: <SegmentEditPage />,
+    loader: async ({ params }) => {
+      const response = await getSegment(Number(assertDefined(params.id, "Segment ID is required")));
+      return json(response.segment, { status: 200 });
+    },
+  },
+  {
     path: newEmailPath,
     element: <EmailForm />,
     loader: async ({ request }) =>
@@ -208,6 +245,10 @@ const routes: RouteObject[] = [
     element: <EmailForm />,
     loader: async ({ params }) =>
       json(await getEditInstallment(assertDefined(params.id, "Installment ID is required")), { status: 200 }),
+  },
+  {
+    path: newSegmentPath,
+    element: <NewSegmentPage />,
   },
 ];
 

@@ -146,7 +146,25 @@ export const ScheduledTab = () => {
                       aria-selected={installment.external_id === selectedInstallmentId}
                       onClick={() => setSelectedInstallmentId(installment.external_id)}
                     >
-                      <td data-label="Subject">{installment.name}</td>
+                      <td data-label="Subject">
+                        <div style={{ display: "flex", alignItems: "center", gap: "var(--spacer-2)" }}>
+                          <span>{installment.name}</span>
+                          {installment.internal_tag && (
+                            <span
+                              style={{
+                                backgroundColor: "var(--color-secondary)",
+                                color: "var(--color-text-secondary)",
+                                padding: "2px 6px",
+                                borderRadius: "3px",
+                                fontSize: "0.75rem",
+                                fontWeight: "500",
+                              }}
+                            >
+                              {installment.internal_tag}
+                            </span>
+                          )}
+                        </div>
+                      </td>
                       <td data-label="Sent to">{installment.recipient_description}</td>
                       <td
                         data-label="Audience"
@@ -178,6 +196,24 @@ export const ScheduledTab = () => {
                   <h2>{selectedInstallment.name}</h2>
                   <button className="close" aria-label="Close" onClick={() => setSelectedInstallmentId(null)} />
                 </header>
+                {selectedInstallment.internal_tag && (
+                  <div>
+                    <span
+                      style={{
+                        backgroundColor: "var(--color-secondary)",
+                        color: "var(--color-text-secondary)",
+                        padding: "4px 8px",
+                        borderRadius: "4px",
+                        fontSize: "0.75rem",
+                        fontWeight: "500",
+                        display: "inline-block",
+                        marginBottom: "var(--spacer-3)",
+                      }}
+                    >
+                      {selectedInstallment.internal_tag}
+                    </span>
+                  </div>
+                )}
                 <div className="stack">
                   <div>
                     <h5>Sent to</h5>

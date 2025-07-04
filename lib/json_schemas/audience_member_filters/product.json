@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "type": "object",
+  "properties": {
+    "operator": {
+      "type": "string",
+      "enum": ["has_bought", "has_not_bought"]
+    },
+    "product_ids": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      },
+      "minItems": 1
+    }
+  },
+  "required": ["operator", "product_ids"],
+  "additionalProperties": false
+}

@@ -76,6 +76,7 @@ export type Workflow = {
   variant_external_id?: string;
   abandoned_cart_products?: AbandonedCartProduct[];
   seller_has_products?: boolean;
+  segments?: { id: number; name: string }[];
 };
 
 export type ProductOption = {
@@ -123,6 +124,7 @@ type WorkflowPayload = {
   created_before: string;
   bought_from: string | null;
   affiliate_products: string[];
+  segment_ids: number[];
   send_to_past_customers: boolean;
   save_action_name: SaveActionName;
 };

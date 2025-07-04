@@ -9,6 +9,8 @@ export type Installment = {
   external_id?: string;
   name: string;
   message: string;
+  preheader?: string;
+  internal_tag?: string;
   published_at: string | null;
   updated_at: string;
   stream_only: boolean;
@@ -33,6 +35,7 @@ export type Installment = {
   has_been_blasted: boolean;
   files: FileItem[];
   shown_in_profile_sections?: string[];
+  segment_ids?: number[];
 };
 
 export type SavedInstallment = Installment & {
@@ -218,6 +221,8 @@ type SaveInstallmentPayload = {
   installment: {
     name: string;
     message: string;
+    preheader?: string;
+    internal_tag?: string;
     files: {
       external_id: string;
       position: number;
@@ -241,6 +246,7 @@ type SaveInstallmentPayload = {
     shown_on_profile: boolean;
     allow_comments: boolean;
     shown_in_profile_sections: string[];
+    segment_ids?: number[];
   };
   variant_external_id: string | null;
   send_preview_email: boolean;

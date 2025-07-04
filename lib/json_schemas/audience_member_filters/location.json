@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "type": "object",
+  "properties": {
+    "operator": {
+      "type": "string",
+      "enum": ["is", "is_not"]
+    },
+    "country": {
+      "type": "string"
+    },
+    "region": {
+      "type": "string"
+    },
+    "city": {
+      "type": "string"
+    }
+  },
+  "required": ["operator"],
+  "anyOf": [
+    {
+      "required": ["country"]
+    },
+    {
+      "required": ["region"]
+    },
+    {
+      "required": ["city"]
+    }
+  ],
+  "additionalProperties": false
+}

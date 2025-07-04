@@ -72,6 +72,9 @@ class Installment < ApplicationRecord
   has_many :sent_post_emails, foreign_key: "post_id"
   has_many :blasts, class_name: "PostEmailBlast", foreign_key: "post_id"
   has_many :sent_abandoned_cart_emails
+  has_many :installment_views, dependent: :destroy
+  has_many :installment_segment_joins, dependent: :destroy
+  has_many :segments, through: :installment_segment_joins
 
   friendly_id :slug_candidates, use: :slugged
 
@@ -263,6 +266,15 @@ class Installment < ApplicationRecord
   MINIMUM_SALES_CENTS_VALUE = 100_00 # $100
 
   MEMBER_CANCELLATION_WORKFLOW_TRIGGER = "member_cancellation"
+
+  enum installment_type: {
+    audience: "audience",
+    product: "product",
+    variant: "variant",
+    seller: "seller",
+    follower: "follower",
+    affiliate: "affiliate"
+  }
 
   def user
     seller.presence || link.user

@@ -106,6 +106,7 @@ class User < ApplicationRecord
   has_many :custom_fields, foreign_key: :seller_id
   has_many :product_refund_policies, -> { where.not(product: nil) }, foreign_key: :seller_id
   has_many :audience_members, foreign_key: :seller_id
+  has_many :segments, dependent: :destroy
   has_many :alive_bank_accounts, -> { alive }, class_name: "BankAccount"
   has_many :wishlists
   has_many :alive_wishlist_follows, -> { alive }, class_name: "WishlistFollower", foreign_key: :follower_user_id
