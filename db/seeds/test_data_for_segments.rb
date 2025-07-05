@@ -10,8 +10,7 @@ seller = User.find_by(email: "seller@gumroad.com") || User.create!(
   name: "Test Seller",
   email: "seller@gumroad.com",
   username: "testseller",
-  password: "password123",
-  role: "owner",
+  password: "TestPassword2024!",
   confirmed_at: Time.current
 )
 
@@ -43,7 +42,7 @@ end
 customers = []
 20.times do |i|
   customer_email = "customer#{i + 1}@example.com"
-  
+
   # Create purchase for random product
   product = products.sample
   purchase = Purchase.create!(
@@ -51,11 +50,14 @@ customers = []
     seller: seller,
     link: product,
     price_cents: product.price_cents,
+    total_transaction_cents: product.price_cents,
+    fee_cents: (product.price_cents * 0.029).round, # 2.9% fee
+    perceived_price_cents: product.price_cents,
     state: "successful",
     created_at: rand(90.days).seconds.ago,
     country: ["United States", "Canada", "United Kingdom", "Germany", "France"].sample
   )
-  
+
   # Create audience member
   audience_member = AudienceMember.create!(
     email: customer_email,
@@ -63,7 +65,7 @@ customers = []
     audience_type: "customer",
     created_at: purchase.created_at
   )
-  
+
   customers << { purchase: purchase, audience_member: audience_member }
   puts "✓ Created customer: #{customer_email} (bought #{product.name})"
 end
@@ -71,20 +73,20 @@ end
 # Create test followers
 10.times do |i|
   follower_email = "follower#{i + 1}@example.com"
-  
+
   follower = Follower.create!(
     email: follower_email,
     seller: seller,
     created_at: rand(60.days).seconds.ago
   )
-  
+
   audience_member = AudienceMember.create!(
     email: follower_email,
     seller: seller,
     audience_type: "subscriber",
     created_at: follower.created_at
   )
-  
+
   puts "✓ Created follower: #{follower_email}"
 end
 
@@ -150,13 +152,13 @@ segments_data.each do |segment_data|
     description: segment_data[:description],
     audience_type: "customer"
   )
-  
+
   # Create filter group
   filter_group = segment.audience_member_filter_groups.create!(
     user: seller,
     name: "Default Group"
   )
-  
+
   # Create filters
   segment_data[:filters].each do |filter_data|
     filter_group.audience_member_filters.create!(
@@ -165,7 +167,7 @@ segments_data.each do |segment_data|
       config: filter_data[:config]
     )
   end
-  
+
   puts "✓ Created segment: #{segment.name} (#{segment.audience_count} members)"
 end
 
@@ -176,12 +178,12 @@ if seller.installments.any?
     description: "Subscribers who opened emails in last 30 days",
     audience_type: "subscriber"
   )
-  
+
   filter_group = engagement_segment.audience_member_filter_groups.create!(
     user: seller,
     name: "Engagement Group"
   )
-  
+
   filter_group.audience_member_filters.create!(
     user: seller,
     filter_type: "email_engagement",
@@ -190,7 +192,7 @@ if seller.installments.any?
       days: 30
     }
   )
-  
+
   puts "✓ Created engagement segment: #{engagement_segment.name}"
 end
 
@@ -204,4 +206,4 @@ puts "- Segments: #{seller.segments.count}"
 puts "\nYou can now test the email segments feature at:"
 puts "- Segments: https://gumroad.dev/emails/segments"
 puts "- New Email: https://gumroad.dev/emails/new"
-puts "\nLogin with: seller@gumroad.com / password123" 
+puts "\nLogin with: seller@gumroad.com / TestPassword2024!"

@@ -1,3 +1,5 @@
+require_relative 'bank_account'
+
 # frozen_string_literal: true
 
 class AchAccount < BankAccount
