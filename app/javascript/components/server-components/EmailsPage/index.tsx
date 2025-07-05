@@ -1,23 +1,23 @@
 import cx from "classnames";
 import React from "react";
-import { RouterProvider, createBrowserRouter, RouteObject, Link, json, useLocation } from "react-router-dom";
+import { Link, RouteObject, RouterProvider, createBrowserRouter, json, useLocation } from "react-router-dom";
 import { StaticRouterProvider } from "react-router-dom/server";
 
 import {
+  SavedInstallment,
   getDraftInstallments,
   getEditInstallment,
   getNewInstallment,
   getPublishedInstallments,
   getScheduledInstallments,
   previewInstallment,
-  SavedInstallment,
 } from "$app/data/installments";
 import { getSegment } from "$app/data/segments";
 import { assertDefined } from "$app/utils/assert";
 import { formatStatNumber } from "$app/utils/formatStatNumber";
 import { asyncVoid } from "$app/utils/promise";
 import { assertResponseError } from "$app/utils/request";
-import { register, GlobalProps, buildStaticRouter } from "$app/utils/serverComponentUtil";
+import { GlobalProps, buildStaticRouter, register } from "$app/utils/serverComponentUtil";
 
 import { Button } from "$app/components/Button";
 import { Icon } from "$app/components/Icons";
@@ -43,9 +43,11 @@ export const newSegmentPath = "/emails/segments/new";
 export const Layout = ({
   selectedTab,
   children,
+  filterComponent,
 }: {
   selectedTab: (typeof TABS)[number];
   children: React.ReactNode;
+  filterComponent?: React.ReactNode;
 }) => {
   const searchInputRef = React.useRef<HTMLInputElement>(null);
   const [isSearchPopoverOpen, setIsSearchPopoverOpen] = React.useState(false);
@@ -83,6 +85,8 @@ export const Layout = ({
               />
             </div>
           </Popover>
+
+          {filterComponent}
 
           {selectedTab === "segments" ? <NewSegmentButton /> : <NewEmailButton />}
         </div>
