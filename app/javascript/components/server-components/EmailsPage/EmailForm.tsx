@@ -11,7 +11,7 @@ import {
   createInstallment,
   Installment,
   InstallmentFormContext,
-  updateInstallment
+  updateInstallment,
 } from "$app/data/installments";
 import { getSegments } from "$app/data/segments";
 import { asyncVoid } from "$app/utils/promise";
@@ -19,11 +19,7 @@ import { assertResponseError } from "$app/utils/request";
 
 import { Button } from "$app/components/Button";
 import { useDomains } from "$app/components/DomainSettings";
-import {
-  filesReducer,
-  isFileUploading,
-  mapEmailFilesToFileState
-} from "$app/components/EmailAttachments";
+import { filesReducer, isFileUploading, mapEmailFilesToFileState } from "$app/components/EmailAttachments";
 import { EvaporateUploaderProvider } from "$app/components/EvaporateUploader";
 import { Icon } from "$app/components/Icons";
 import { S3UploadConfigProvider } from "$app/components/S3UploadConfig";
@@ -92,7 +88,11 @@ export const EmailForm = () => {
     email: installment?.send_emails ?? hasAudience,
     profile: installment?.shown_on_profile ?? true,
   });
-  const [filtersData, setFiltersData] = React.useState<{ audienceType: string; segmentIds?: string[]; filterGroups?: any[] }>({ audienceType });
+  const [filtersData, setFiltersData] = React.useState<{
+    audienceType: string;
+    segmentIds?: string[];
+    filterGroups?: any[];
+  }>({ audienceType });
 
   // Use shared filter width logic
   const { containerWidth, formMinWidth, isWideLayout } = useFilterWidth(filtersData.filterGroups);
@@ -108,12 +108,8 @@ export const EmailForm = () => {
   const [notBought] = React.useState<string[]>(
     installment?.not_bought_products ?? installment?.not_bought_variants ?? [],
   );
-  const [paidMoreThanCents] = React.useState<number | null>(
-    installment?.paid_more_than_cents ?? null,
-  );
-  const [paidLessThanCents] = React.useState<number | null>(
-    installment?.paid_less_than_cents ?? null,
-  );
+  const [paidMoreThanCents] = React.useState<number | null>(installment?.paid_more_than_cents ?? null);
+  const [paidLessThanCents] = React.useState<number | null>(installment?.paid_less_than_cents ?? null);
   const [afterDate] = React.useState(installment?.created_after ?? "");
   const [beforeDate] = React.useState(installment?.created_before ?? "");
   const [fromCountry] = React.useState(installment?.bought_from ?? "");
@@ -142,7 +138,9 @@ export const EmailForm = () => {
   );
   const [internalTag, setInternalTag] = React.useState(installment?.internal_tag ?? "");
   const isPublished = !!(installment?.external_id && installment.published_at);
-  const [publishDate, setPublishDate] = React.useState(installment?.published_at ? toISODateString(installment.published_at) : "");
+  const [publishDate, setPublishDate] = React.useState(
+    installment?.published_at ? toISODateString(installment.published_at) : "",
+  );
   const [isSaving, setIsSaving] = React.useState(false);
   const [invalidFields, setInvalidFields] = React.useState<Set<InvalidFieldName>>(new Set());
 
@@ -239,18 +237,20 @@ export const EmailForm = () => {
     bought_from: fromCountry,
     created_after: afterDate,
     created_before: beforeDate,
-    bought_products: boughtProducts.map(p => p.id),
-    bought_variants: boughtVariants.map(v => v.id),
-    not_bought_products: notBoughtProducts.map(p => p.id),
-    not_bought_variants: notBoughtVariants.map(v => v.id),
+    bought_products: boughtProducts.map((p) => p.id),
+    bought_variants: boughtVariants.map((v) => v.id),
+    not_bought_products: notBoughtProducts.map((p) => p.id),
+    not_bought_variants: notBoughtVariants.map((v) => v.id),
     affiliate_products: affiliatedProducts,
-    filters_payload: filtersData.filterGroups ? {
-      audience_type: filtersData.audienceType,
-      filter_groups: filtersData.filterGroups.map((group: any) => ({
-        name: group.id,
-        filters: group.filters.map((filter: any) => convertUIFilterToAPI(filter)),
-      })),
-    } : null,
+    filters_payload: filtersData.filterGroups
+      ? {
+          audience_type: filtersData.audienceType,
+          filter_groups: filtersData.filterGroups.map((group: any) => ({
+            name: group.id,
+            filters: group.filters.map((filter: any) => convertUIFilterToAPI(filter)),
+          })),
+        }
+      : null,
   };
 
   const validate = (action: SaveAction) => {
@@ -326,7 +326,7 @@ export const EmailForm = () => {
     const payload = {
       installment: {
         name: title,
-        message,
+        message: message || "Write a personalized message...",
         preheader,
         internal_tag: internalTag,
         files: files.map((file, position) => ({
@@ -424,7 +424,7 @@ export const EmailForm = () => {
             width: "100%",
             margin: "0 auto",
             transition: "max-width 0.3s ease",
-            alignItems: "flex-start"
+            alignItems: "flex-start",
           }}
         >
           <div
@@ -434,7 +434,7 @@ export const EmailForm = () => {
               minWidth: "15rem",
               flexShrink: 0,
               position: isWideLayout ? "static" : "sticky",
-              top: isWideLayout ? "auto" : "3rem"
+              top: isWideLayout ? "auto" : "3rem",
             }}
           >
             <p style={{ color: "var(--color-text-secondary)", lineHeight: 1.4 }}>
@@ -444,202 +444,208 @@ export const EmailForm = () => {
           <div style={{ flex: 1, minWidth: 0 }}>
             <S3UploadConfigProvider value={s3UploadConfig}>
               <EvaporateUploaderProvider value={evaporateUploader}>
-                <div style={{
-                  display: "grid",
-                  gap: "var(--spacer-5)",
-                  width: "100%",
-                  maxWidth: "none",
-                  minWidth: formMinWidth,
-                  transition: "all 0.3s ease",
-                  overflow: "visible"
-                }}>
-                <fieldset className={cx({ danger: invalidFields.has("title") })}>
-                  <legend>
-                    <label htmlFor={`${uid}-subject-input`}>Subject</label>
-                  </legend>
-                  <input
-                    id={`${uid}-subject-input`}
-                    ref={titleRef}
-                    type="text"
-                    placeholder="Subject"
-                    maxLength={255}
-                    value={title}
-                    onChange={(e) => {
-                      setTitle(e.target.value);
-                      markFieldAsValid("title");
-                    }}
-                  />
-                </fieldset>
-
-                <fieldset>
-                  <legend>
-                    <label htmlFor={`${uid}-preheader-input`}>Preheader</label>
-                  </legend>
-                  <input
-                    id={`${uid}-preheader-input`}
-                    type="text"
-                    maxLength={255}
-                    value={preheader}
-                    onChange={(e) => setPreheader(e.target.value)}
-                  />
-                  <small style={{ marginTop: "var(--spacer-1)" }}>
-                    Appears below the subject line, offering a quick preview of your email.
-                  </small>
-                </fieldset>
-                {/* Channel selection */}
-                <fieldset>
-                  <legend>Channel</legend>
-                  <div className="radio-buttons" role="radiogroup" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(13rem, 1fr))" }}>
-                    {[
-                      {
-                        id: "all",
-                        title: "All channels",
-                        description: "Reach everyone—send an email and post to your profile.",
-                        icon: "solid-hand",
-                        value: { email: true, profile: true },
-                      },
-                      {
-                        id: "email",
-                        title: "Email",
-                        description: "Send an email to your chosen audience.",
-                        icon: "envelope-fill",
-                        value: { email: true, profile: false },
-                      },
-                      {
-                        id: "post",
-                        title: "Post",
-                        description: "Publish a post to your profile to your chosen audience.",
-                        icon: "solid-document-text",
-                        value: { email: false, profile: true },
-                      },
-                    ].map((opt) => {
-                      const isActive = channel.email === opt.value.email && channel.profile === opt.value.profile;
-                      return (
-                        <Button
-                          key={opt.id}
-                          className="vertical"
-                          role="radio"
-                          aria-checked={isActive}
-                          onClick={() => setChannel(opt.value)}
-                        >
-                          <Icon name={opt.icon as any} style={{ fontSize: "2rem" }} />
-                          <div>
-                            <h4>{opt.title}</h4>
-                            {opt.description}
-                          </div>
-                        </Button>
-                      );
-                    })}
-                  </div>
-                </fieldset>
-                {/* Allow comments */}
-                {channel.profile ? (
-                  <label style={{ display: "flex", alignItems: "center", gap: "var(--spacer-2)" }}>
+                <div
+                  style={{
+                    display: "grid",
+                    gap: "var(--spacer-5)",
+                    width: "100%",
+                    maxWidth: "none",
+                    minWidth: formMinWidth,
+                    transition: "all 0.3s ease",
+                    overflow: "visible",
+                  }}
+                >
+                  <fieldset className={cx({ danger: invalidFields.has("title") })}>
+                    <legend>
+                      <label htmlFor={`${uid}-subject-input`}>Subject</label>
+                    </legend>
                     <input
-                      type="checkbox"
-                      checked={allowComments}
-                      onChange={(e) => setAllowComments(e.target.checked)}
-                    />
-                    Allow comments in your post
-                  </label>
-                ) : null}
-                {isPublished ? (
-                  <fieldset className={cx({ danger: invalidFields.has("publishDate") })}>
-                    <input
-                      ref={publishDateRef}
-                      type="date"
-                      placeholder="Publish date"
-                      id={`${uid}-publish_date`}
-                      value={publishDate}
-                      onChange={(event) => {
-                        setPublishDate(event.target.value);
-                        markFieldAsValid("publishDate");
+                      id={`${uid}-subject-input`}
+                      ref={titleRef}
+                      type="text"
+                      placeholder="Subject"
+                      maxLength={255}
+                      value={title}
+                      onChange={(e) => {
+                        setTitle(e.target.value);
+                        markFieldAsValid("title");
                       }}
-                      max={toISODateString(new Date())}
                     />
                   </fieldset>
-                ) : null}
 
-                <div style={{ width: "100%", overflow: "visible" }}>
-                  <RecipientsFilterPanel
-                    audienceType={audienceType}
-                    onAudienceTypeChange={(type) => setAudienceType(type as AudienceType)}
-                    onFiltersChange={setFiltersData}
-                    disabled={!!isPublished}
-                  />
-                </div>
-
-                {/* Internal tag */}
-                <div style={{ width: "100%", overflow: "visible" }}>
-                  <div style={{ display: "grid", gap: "var(--spacer-4)" }}>
-                    <fieldset>
-                      <legend>Internal tag</legend>
-                      <Popover
-                      trigger={
-                        <div
-                          style={{
-                            width: "100%",
-                            height: "48px",
-                            border: "1px solid #000",
-                            borderRadius: "4px",
-                            padding: "12px 16px",
-                            backgroundColor: "var(--color-surface)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            cursor: "pointer",
-                            fontSize: "14px",
-                            fontWeight: 400,
-                            boxSizing: "border-box",
-                          }}
-                        >
-                          {internalTag || "Select a tag"} <Icon name="outline-cheveron-down" />
-                        </div>
-                      }
+                  <fieldset>
+                    <legend>
+                      <label htmlFor={`${uid}-preheader-input`}>Preheader</label>
+                    </legend>
+                    <input
+                      id={`${uid}-preheader-input`}
+                      type="text"
+                      maxLength={255}
+                      value={preheader}
+                      onChange={(e) => setPreheader(e.target.value)}
+                    />
+                    <small style={{ marginTop: "var(--spacer-1)" }}>
+                      Appears below the subject line, offering a quick preview of your email.
+                    </small>
+                  </fieldset>
+                  {/* Channel selection */}
+                  <fieldset>
+                    <legend>Channel</legend>
+                    <div
+                      className="radio-buttons"
+                      role="radiogroup"
+                      style={{ gridTemplateColumns: "repeat(auto-fit, minmax(13rem, 1fr))" }}
                     >
-                      {(close) => (
-                        <ul role="menu">
-                          <li
-                            role="menuitemradio"
-                            aria-checked={internalTag === ""}
-                            onClick={() => {
-                              setInternalTag("");
-                              close();
-                            }}
+                      {[
+                        {
+                          id: "all",
+                          title: "All channels",
+                          description: "Reach everyone—send an email and post to your profile.",
+                          icon: "solid-hand",
+                          value: { email: true, profile: true },
+                        },
+                        {
+                          id: "email",
+                          title: "Email",
+                          description: "Send an email to your chosen audience.",
+                          icon: "envelope-fill",
+                          value: { email: true, profile: false },
+                        },
+                        {
+                          id: "post",
+                          title: "Post",
+                          description: "Publish a post to your profile to your chosen audience.",
+                          icon: "solid-document-text",
+                          value: { email: false, profile: true },
+                        },
+                      ].map((opt) => {
+                        const isActive = channel.email === opt.value.email && channel.profile === opt.value.profile;
+                        return (
+                          <Button
+                            key={opt.id}
+                            className="vertical"
+                            role="radio"
+                            aria-checked={isActive}
+                            onClick={() => setChannel(opt.value)}
                           >
-                            <span>Select a tag</span>
-                          </li>
-                          {[
-                            { value: "announcements", label: "Announcements" },
-                            { value: "updates", label: "Updates" },
-                            { value: "newsletter", label: "Newsletter" },
-                            { value: "promotions", label: "Promotions" },
-                            { value: "content", label: "Content" },
-                          ].map((option) => (
-                            <li
-                              key={option.value}
-                              role="menuitemradio"
-                              aria-checked={option.value === internalTag}
-                              onClick={() => {
-                                setInternalTag(option.value);
-                                close();
+                            <Icon name={opt.icon as any} style={{ fontSize: "2rem" }} />
+                            <div>
+                              <h4>{opt.title}</h4>
+                              {opt.description}
+                            </div>
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  </fieldset>
+                  {/* Allow comments */}
+                  {channel.profile ? (
+                    <label style={{ display: "flex", alignItems: "center", gap: "var(--spacer-2)" }}>
+                      <input
+                        type="checkbox"
+                        checked={allowComments}
+                        onChange={(e) => setAllowComments(e.target.checked)}
+                      />
+                      Allow comments in your post
+                    </label>
+                  ) : null}
+                  {isPublished ? (
+                    <fieldset className={cx({ danger: invalidFields.has("publishDate") })}>
+                      <input
+                        ref={publishDateRef}
+                        type="date"
+                        placeholder="Publish date"
+                        id={`${uid}-publish_date`}
+                        value={publishDate}
+                        onChange={(event) => {
+                          setPublishDate(event.target.value);
+                          markFieldAsValid("publishDate");
+                        }}
+                        max={toISODateString(new Date())}
+                      />
+                    </fieldset>
+                  ) : null}
+
+                  <div style={{ width: "100%", overflow: "visible" }}>
+                    <RecipientsFilterPanel
+                      audienceType={audienceType}
+                      onAudienceTypeChange={(type) => setAudienceType(type as AudienceType)}
+                      onFiltersChange={setFiltersData}
+                      disabled={!!isPublished}
+                    />
+                  </div>
+
+                  {/* Internal tag */}
+                  <div style={{ width: "100%", overflow: "visible" }}>
+                    <div style={{ display: "grid", gap: "var(--spacer-4)" }}>
+                      <fieldset>
+                        <legend>Internal tag</legend>
+                        <Popover
+                          trigger={
+                            <div
+                              style={{
+                                width: "100%",
+                                height: "48px",
+                                border: "1px solid #000",
+                                borderRadius: "4px",
+                                padding: "12px 16px",
+                                backgroundColor: "var(--color-surface)",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                cursor: "pointer",
+                                fontSize: "14px",
+                                fontWeight: 400,
+                                boxSizing: "border-box",
                               }}
                             >
-                              <span>{option.label}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                      </Popover>
-                      <small style={{ marginTop: "var(--spacer-1)", color: "#666" }}>
-                        This is for your reference only to help filter your emails, recipients will not see it.
-                      </small>
-                    </fieldset>
+                              {internalTag || "Select a tag"} <Icon name="outline-cheveron-down" />
+                            </div>
+                          }
+                        >
+                          {(close) => (
+                            <ul role="menu">
+                              <li
+                                role="menuitemradio"
+                                aria-checked={internalTag === ""}
+                                onClick={() => {
+                                  setInternalTag("");
+                                  close();
+                                }}
+                              >
+                                <span>Select a tag</span>
+                              </li>
+                              {[
+                                { value: "announcements", label: "Announcements" },
+                                { value: "updates", label: "Updates" },
+                                { value: "newsletter", label: "Newsletter" },
+                                { value: "promotions", label: "Promotions" },
+                                { value: "content", label: "Content" },
+                              ].map((option) => (
+                                <li
+                                  key={option.value}
+                                  role="menuitemradio"
+                                  aria-checked={option.value === internalTag}
+                                  onClick={() => {
+                                    setInternalTag(option.value);
+                                    close();
+                                  }}
+                                >
+                                  <span>{option.label}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </Popover>
+                        <small style={{ marginTop: "var(--spacer-1)", color: "#666" }}>
+                          This is for your reference only to help filter your emails, recipients will not see it.
+                        </small>
+                      </fieldset>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </EvaporateUploaderProvider>
-          </S3UploadConfigProvider>
+              </EvaporateUploaderProvider>
+            </S3UploadConfigProvider>
           </div>
         </div>
       </section>

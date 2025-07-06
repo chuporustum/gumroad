@@ -24,6 +24,7 @@ import { Icon } from "$app/components/Icons";
 import { Popover } from "$app/components/Popover";
 import { showAlert } from "$app/components/server-components/Alert";
 import { DraftsTab } from "$app/components/server-components/EmailsPage/DraftsTab";
+import { EmailEditor } from "$app/components/server-components/EmailsPage/EmailEditor";
 import { EmailForm } from "$app/components/server-components/EmailsPage/EmailForm";
 import { NewSegmentPage } from "$app/components/server-components/EmailsPage/NewSegmentPage";
 import { PublishedTab } from "$app/components/server-components/EmailsPage/PublishedTab";
@@ -246,7 +247,7 @@ const routes: RouteObject[] = [
   },
   {
     path: editEmailPath(":id"),
-    element: <EmailForm />,
+    element: <EmailEditor />,
     loader: async ({ params }) =>
       json(await getEditInstallment(assertDefined(params.id, "Installment ID is required")), { status: 200 }),
   },
