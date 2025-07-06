@@ -2,14 +2,16 @@ import cx from "classnames";
 import React from "react";
 import { useNavigate } from "react-router-dom";
 
+import { useFilterWidth } from "$app/components/FilterBuilder";
+
 import {
-  generateWithAI,
-  type Segment,
-  type AudienceMemberFilterGroup,
-  previewSegment,
   createSegment,
+  generateWithAI,
+  previewSegment,
   updateSegment,
   type FilterConfig as APIFilterConfig,
+  type AudienceMemberFilterGroup,
+  type Segment,
 } from "$app/data/segments";
 
 import { Button } from "$app/components/Button";
@@ -22,7 +24,7 @@ import { emailTabPath } from "$app/components/server-components/EmailsPage";
 import { AIGenerationModal } from "./AIGenerationModal";
 import { FilterBuilder } from "./FilterBuilder";
 import { type FilterGroup } from "./FilterGroup";
-import { type FilterConfig as UIFilterConfig, type FilterType } from "./FilterRow";
+import { type FilterType, type FilterConfig as UIFilterConfig } from "./FilterRow";
 
 // Custom dropdown component for audience selection
 const AudienceDropdown: React.FC<{
@@ -316,28 +318,9 @@ export const SegmentForm: React.FC<SegmentFormProps> = ({ segment }) => {
 
   const uid = React.useId();
 
-  // Check if any filter group contains filters that need more width
-  const hasWideFilters = React.useMemo(() => {
-    // Check both current form data and AI suggestions
-    const filterGroupsToCheck = aiSuggestion ? aiSuggestion.filterGroups : formData.filterGroups;
-
-    return filterGroupsToCheck.some((group) =>
-      group.filters.some(
-        (filter) =>
-          // Date filters need more width for third dropdown + date input
-          filter.filter_type === "date" ||
-          // Product filters need more width for dropdown + product ID input
-          filter.filter_type === "product" ||
-          // Email engagement filters need more width for number input + "days" text
-          filter.filter_type === "email_engagement" ||
-          // Location filters with country dropdown also need more width
-          filter.filter_type === "location",
-      ),
-    );
-  }, [formData.filterGroups, aiSuggestion]);
-
-  // Dynamic width based on filter complexity
-  const formMaxWidth = hasWideFilters ? "1100px" : "700px";
+  // Use shared filter width logic
+  const filterGroupsToCheck = aiSuggestion ? aiSuggestion.filterGroups : formData.filterGroups;
+  const { formMinWidth: formMaxWidth } = useFilterWidth(filterGroupsToCheck);
 
   // Fetch recipient count whenever filters change
   React.useEffect(() => {
