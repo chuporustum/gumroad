@@ -291,7 +291,7 @@ const getValueInput = (filter: FilterConfig, onUpdate: (filter: FilterConfig) =>
                 onChange={(e) => onUpdate({ ...filter, value: { ...filter.value, days: e.target.value } })}
                 placeholder="30"
               />
-              <span style={{ fontSize: "14px", color: "var(--color-text)" }}>days</span>
+              <span style={{ fontSize: "14px", color: "var(--color-text)", whiteSpace: "nowrap" }}>days</span>
             </div>
           ) : (
             <DateInput
@@ -303,6 +303,7 @@ const getValueInput = (filter: FilterConfig, onUpdate: (filter: FilterConfig) =>
                 height: "40px",
                 padding: "8px 12px",
                 backgroundColor: "var(--color-surface)",
+                width: "150px",
               }}
             />
           )}
@@ -330,7 +331,7 @@ const getValueInput = (filter: FilterConfig, onUpdate: (filter: FilterConfig) =>
             onChange={(e) => onUpdate({ ...filter, value: { ...filter.value, days: e.target.value } })}
             placeholder="30"
           />
-          <span style={{ fontSize: "14px", color: "var(--color-text)" }}>days</span>
+          <span style={{ fontSize: "14px", color: "var(--color-text)", whiteSpace: "nowrap" }}>days</span>
         </div>
       );
 

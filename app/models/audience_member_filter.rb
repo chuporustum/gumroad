@@ -9,7 +9,7 @@ class AudienceMemberFilter < ApplicationRecord
   enum filter_type: FILTER_TYPES.index_with(&:itself)
 
   validates :filter_type, inclusion: { in: FILTER_TYPES }
-  # validate :config_matches_schema  # Temporarily disabled for testing
+  validate :config_matches_schema
 
   before_validation :set_default_config
 

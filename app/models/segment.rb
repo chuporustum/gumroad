@@ -15,6 +15,24 @@ class Segment < ApplicationRecord
 
   scope :for_user, ->(user) { where(user: user) }
 
+  # Temporary method to provide default audience_type until migration can be run
+  def audience_type
+    # Check if the column exists in the database
+    if self.class.column_names.include?('audience_type')
+      self[:audience_type] || 'customer'
+    else
+      'customer'
+    end
+  end
+
+  def audience_type=(value)
+    # Only set if column exists
+    if self.class.column_names.include?('audience_type')
+      self[:audience_type] = value
+    end
+    # Otherwise ignore the assignment silently
+  end
+
   def filter(user_id)
     # Start with an empty relation
     base_relation = AudienceMember.where(seller_id: user_id)

@@ -120,7 +120,7 @@ const TagDropdown: React.FC<{
   };
 
   return (
-    <Popover trigger={<DropdownTrigger label={label} />}>
+    <Popover trigger={<DropdownTrigger label={label ?? "Select"} />}>
       {
         (/* close */) => (
           <ul role="menu" style={{ maxHeight: "220px", overflowY: "auto" }}>
