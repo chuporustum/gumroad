@@ -621,8 +621,13 @@ export const SegmentForm: React.FC<SegmentFormProps> = ({ segment }) => {
               }}
             >
               <fieldset>
-                <legend>
+                <legend style={{ display: "flex", alignItems: "center", gap: "var(--spacer-2)" }}>
                   <label>Contacts in this segment: {recipientCount.loading ? "..." : recipientCount.count || 0}</label>
+                  {!aiSuggestion && (
+                    <div style={{ marginLeft: "auto" }}>
+                      <AIGenerationModal onGenerate={handleAIGenerateWrapper} isGenerating={isGenerating} />
+                    </div>
+                  )}
                 </legend>
                 <AudienceDropdown
                   value={aiSuggestion ? aiSuggestion.audienceType || formData.audience_type : formData.audience_type}
@@ -640,15 +645,15 @@ export const SegmentForm: React.FC<SegmentFormProps> = ({ segment }) => {
               </fieldset>
             </div>
 
-            {/* AI Generation button or Accept/Reject buttons */}
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "flex-end",
-                marginBottom: "var(--spacer-3)",
-              }}
-            >
-              {aiSuggestion ? (
+            {/* AI Accept/Reject buttons */}
+            {aiSuggestion && (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  marginBottom: "var(--spacer-3)",
+                }}
+              >
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                   <Button
                     onClick={handleRejectAI}
@@ -705,10 +710,8 @@ export const SegmentForm: React.FC<SegmentFormProps> = ({ segment }) => {
                     Accept
                   </Button>
                 </div>
-              ) : (
-                <AIGenerationModal onGenerate={handleAIGenerateWrapper} isGenerating={isGenerating} />
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Filter Container */}
             <FilterContainer

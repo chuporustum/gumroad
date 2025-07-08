@@ -22,10 +22,25 @@ export const AIGenerationModal: React.FC<AIGenerationModalProps> = ({ onGenerate
   return (
     <Popover
       trigger={
-        <Button outline disabled={isGenerating}>
+        <button
+          type="button"
+          disabled={isGenerating}
+          style={{
+            background: "transparent",
+            border: "1px solid #000",
+            borderRadius: "4px",
+            padding: "4px 8px",
+            cursor: isGenerating ? "not-allowed" : "pointer",
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            minWidth: "32px",
+            height: "32px",
+          }}
+          aria-label="Generate with AI"
+        >
           <Icon name="lighting-fill" />
-          Generate with AI
-        </Button>
+        </button>
       }
       position="bottom"
       aria-label="Segment filter"

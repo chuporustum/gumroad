@@ -109,7 +109,7 @@ export const EmailEditor = () => {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 style={{
-                  width: "90%",
+                  width: "100%",
                   height: "48px",
                   border: "1px solid #000",
                   borderRadius: "4px",
@@ -123,7 +123,7 @@ export const EmailEditor = () => {
 
             {/* Rich Text Editor */}
             <div>
-              <div style={{ width: "90%" }}>
+              <div style={{ width: "100%" }}>
                 <div
                   style={{
                     minHeight: "400px",
@@ -136,6 +136,20 @@ export const EmailEditor = () => {
                       .ProseMirror {
                         padding: 16px !important;
                         outline: none !important;
+                        direction: ltr !important;
+                        unicode-bidi: normal !important;
+                        text-align: left !important;
+                      }
+                      .ProseMirror * {
+                        direction: ltr !important;
+                        unicode-bidi: normal !important;
+                      }
+                      .rich-text-editor, .rich-text-editor-toolbar {
+                        direction: ltr !important;
+                      }
+                      input[type="text"], textarea {
+                        direction: ltr !important;
+                        unicode-bidi: normal !important;
                       }
                     `}</style>
                   <RichTextEditor
@@ -151,7 +165,7 @@ export const EmailEditor = () => {
             </div>
 
             {/* Attach Files Button */}
-            <div style={{ width: "90%" }}>
+            <div style={{ width: "100%" }}>
               <Button
                 style={{
                   backgroundColor: "#000",
