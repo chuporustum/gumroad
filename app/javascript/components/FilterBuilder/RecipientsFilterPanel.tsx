@@ -1,12 +1,13 @@
 import React from "react";
 
+import { generateWithAI, previewSegment } from "$app/data/segments";
+
 import { Button } from "$app/components/Button";
 import { LoadingSpinner } from "$app/components/LoadingSpinner";
 import { showAlert } from "$app/components/server-components/Alert";
 import { AIGenerationModal } from "$app/components/server-components/EmailsPage/AIGenerationModal";
 import { type FilterGroup } from "$app/components/server-components/EmailsPage/FilterGroup";
 import { type FilterConfig as UIFilterConfig } from "$app/components/server-components/EmailsPage/FilterRow";
-import { generateWithAI, previewSegment } from "$app/data/segments";
 
 import { AudienceDropdown } from "./AudienceDropdown";
 import { FilterContainer } from "./FilterContainer";
@@ -45,16 +46,20 @@ export const RecipientsFilterPanel: React.FC<RecipientsFilterPanelProps> = ({
       const currentFilterGroups = aiSuggestion ? aiSuggestion.filterGroups : filterGroups;
       const currentAudienceType = aiSuggestion ? aiSuggestion.audienceType || audienceType : audienceType;
 
+      const isValidAudienceType = (type: string): type is "affiliate" | "customer" | "everyone" | "subscriber" => {
+        return ["affiliate", "customer", "everyone", "subscriber"].includes(type);
+      };
+
       const payload = {
         segment: {
           name: "temp",
-          audience_type: currentAudienceType as "affiliate" | "customer" | "everyone" | "subscriber",
+          audience_type: isValidAudienceType(currentAudienceType) ? currentAudienceType : "customer",
         },
         filter_groups: currentFilterGroups.map((group) => ({
           name: group.id,
           filters: group.filters.map((filter) => convertUIFilterToAPI(filter)),
         })),
-      } as const;
+      };
 
       try {
         const { audience_count } = await previewSegment(payload);

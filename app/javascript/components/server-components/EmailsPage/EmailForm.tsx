@@ -4,8 +4,6 @@ import React from "react";
 import { Link, Location, useLoaderData, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { cast } from "ts-safe-cast";
 
-import { convertUIFilterToAPI, RecipientsFilterPanel, useFilterWidth } from "$app/components/FilterBuilder";
-import { Popover } from "$app/components/Popover";
 import {
   AudienceType,
   createInstallment,
@@ -21,7 +19,10 @@ import { Button } from "$app/components/Button";
 import { useDomains } from "$app/components/DomainSettings";
 import { filesReducer, isFileUploading, mapEmailFilesToFileState } from "$app/components/EmailAttachments";
 import { EvaporateUploaderProvider } from "$app/components/EvaporateUploader";
+import { convertUIFilterToAPI, RecipientsFilterPanel, useFilterWidth } from "$app/components/FilterBuilder";
+import { type FilterGroup } from "$app/components/server-components/EmailsPage/FilterGroup";
 import { Icon } from "$app/components/Icons";
+import { Popover } from "$app/components/Popover";
 import { S3UploadConfigProvider } from "$app/components/S3UploadConfig";
 import { showAlert } from "$app/components/server-components/Alert";
 import { editEmailPath, emailTabPath, newEmailPath } from "$app/components/server-components/EmailsPage";
@@ -91,7 +92,7 @@ export const EmailForm = () => {
   const [filtersData, setFiltersData] = React.useState<{
     audienceType: string;
     segmentIds?: string[];
-    filterGroups?: any[];
+    filterGroups?: FilterGroup[];
   }>({ audienceType });
 
   // Use shared filter width logic
@@ -151,6 +152,8 @@ export const EmailForm = () => {
         // Segments are handled by RecipientsFilterPanel now
       } catch (e) {
         console.error("Failed to fetch segments:", e);
+        // TODO: In production, replace with proper error tracking service
+        // Example: errorTracker.captureException(e, { context: 'fetchSegments' });
       }
     };
     fetchSegments();
@@ -245,9 +248,9 @@ export const EmailForm = () => {
     filters_payload: filtersData.filterGroups
       ? {
           audience_type: filtersData.audienceType,
-          filter_groups: filtersData.filterGroups.map((group: any) => ({
+          filter_groups: filtersData.filterGroups.map((group) => ({
             name: group.id,
-            filters: group.filters.map((filter: any) => convertUIFilterToAPI(filter)),
+            filters: group.filters.map((filter) => convertUIFilterToAPI(filter)),
           })),
         }
       : null,
@@ -490,10 +493,12 @@ export const EmailForm = () => {
                   </fieldset>
                   {/* Channel selection */}
                   <fieldset>
-                    <legend>Channel</legend>
+                    <legend id="channel-group-label">Channel</legend>
                     <div
                       className="radio-buttons"
                       role="radiogroup"
+                      aria-labelledby="channel-group-label"
+                      aria-required="true"
                       style={{ gridTemplateColumns: "repeat(auto-fit, minmax(13rem, 1fr))" }}
                     >
                       {[
@@ -526,12 +531,20 @@ export const EmailForm = () => {
                             className="vertical"
                             role="radio"
                             aria-checked={isActive}
+                            aria-describedby={`${opt.id}-description`}
+                            tabIndex={isActive ? 0 : -1}
                             onClick={() => setChannel(opt.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === " " || e.key === "Enter") {
+                                e.preventDefault();
+                                setChannel(opt.value);
+                              }
+                            }}
                           >
-                            <Icon name={opt.icon as any} style={{ fontSize: "2rem" }} />
+                            <Icon name={opt.icon} style={{ fontSize: "2rem" }} />
                             <div>
                               <h4>{opt.title}</h4>
-                              {opt.description}
+                              <div id={`${opt.id}-description`}>{opt.description}</div>
                             </div>
                           </Button>
                         );
@@ -569,7 +582,12 @@ export const EmailForm = () => {
                   <div style={{ width: "100%", overflow: "visible" }}>
                     <RecipientsFilterPanel
                       audienceType={audienceType}
-                      onAudienceTypeChange={(type) => setAudienceType(type as AudienceType)}
+                      onAudienceTypeChange={(type) => {
+                        const isValidAudienceType = (t: string): t is AudienceType => {
+                          return ["everyone", "customers", "affiliates", "followers"].includes(t);
+                        };
+                        setAudienceType(isValidAudienceType(type) ? type : "everyone");
+                      }}
                       onFiltersChange={setFiltersData}
                       disabled={!!isPublished}
                     />

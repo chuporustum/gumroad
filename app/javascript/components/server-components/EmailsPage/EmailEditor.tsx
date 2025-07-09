@@ -30,11 +30,11 @@ export const EmailEditor = () => {
     try {
       const payload = {
         installment: {
-          name: name,
-          message: message,
+          name,
+          message,
         },
         publish,
-      } as any;
+      };
 
       await updateInstallment(installment.external_id, payload);
 

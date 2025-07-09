@@ -2,8 +2,6 @@ import cx from "classnames";
 import React from "react";
 import { useNavigate } from "react-router-dom";
 
-import { useFilterWidth } from "$app/components/FilterBuilder";
-
 import {
   createSegment,
   generateWithAI,
@@ -15,6 +13,7 @@ import {
 } from "$app/data/segments";
 
 import { Button } from "$app/components/Button";
+import { useFilterWidth } from "$app/components/FilterBuilder";
 import { Icon } from "$app/components/Icons";
 import { LoadingSpinner } from "$app/components/LoadingSpinner";
 import { Popover } from "$app/components/Popover";
@@ -646,7 +645,7 @@ export const SegmentForm: React.FC<SegmentFormProps> = ({ segment }) => {
             </div>
 
             {/* AI Accept/Reject buttons */}
-            {aiSuggestion && (
+            {aiSuggestion ? (
               <div
                 style={{
                   display: "flex",
@@ -711,7 +710,7 @@ export const SegmentForm: React.FC<SegmentFormProps> = ({ segment }) => {
                   </Button>
                 </div>
               </div>
-            )}
+            ) : null}
 
             {/* Filter Container */}
             <FilterContainer

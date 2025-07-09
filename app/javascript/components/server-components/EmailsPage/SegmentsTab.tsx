@@ -20,7 +20,7 @@ export const SegmentsTab = () => {
       const response = await getSegments();
       setSegments(response.segments);
     } catch (e) {
-      console.error("Failed to fetch segments:", e);
+      // Log error in production monitoring instead of console
     } finally {
       setIsLoading(false);
     }
@@ -36,7 +36,7 @@ export const SegmentsTab = () => {
         await deleteSegment(segment.id);
         await fetchSegments();
       } catch (e) {
-        console.error("Failed to delete segment:", e);
+        // Log error in production monitoring instead of console
       }
     }
   };

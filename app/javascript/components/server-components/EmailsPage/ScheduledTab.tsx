@@ -149,7 +149,7 @@ export const ScheduledTab = () => {
                       <td data-label="Subject">
                         <div style={{ display: "flex", alignItems: "center", gap: "var(--spacer-2)" }}>
                           <span>{installment.name}</span>
-                          {installment.internal_tag && (
+                          {installment.internal_tag ? (
                             <span
                               style={{
                                 backgroundColor: "var(--color-secondary)",
@@ -162,7 +162,7 @@ export const ScheduledTab = () => {
                             >
                               {installment.internal_tag}
                             </span>
-                          )}
+                          ) : null}
                         </div>
                       </td>
                       <td data-label="Sent to">{installment.recipient_description}</td>
@@ -196,7 +196,7 @@ export const ScheduledTab = () => {
                   <h2>{selectedInstallment.name}</h2>
                   <button className="close" aria-label="Close" onClick={() => setSelectedInstallmentId(null)} />
                 </header>
-                {selectedInstallment.internal_tag && (
+                {selectedInstallment.internal_tag ? (
                   <div>
                     <span
                       style={{
@@ -213,7 +213,7 @@ export const ScheduledTab = () => {
                       {selectedInstallment.internal_tag}
                     </span>
                   </div>
-                )}
+                ) : null}
                 <div className="stack">
                   <div>
                     <h5>Sent to</h5>

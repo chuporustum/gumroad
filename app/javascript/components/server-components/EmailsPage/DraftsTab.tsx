@@ -173,8 +173,8 @@ export const DraftsTab = () => {
   }, [installments]);
 
   // Filter installments client-side based on selected filters
-  const filteredInstallments = React.useMemo(() => {
-    return installments.filter((installment) => {
+  const filteredInstallments = React.useMemo(() => 
+    installments.filter((installment) => {
       // Type filter
       if (selectedType !== "all") {
         const installmentType = installment.installment_type || "audience";
@@ -191,8 +191,8 @@ export const DraftsTab = () => {
       }
 
       return true;
-    });
-  }, [installments, selectedType, selectedTags]);
+    }),
+  [installments, selectedType, selectedTags]);
 
   const clearFilters = () => {
     setSelectedType("all");
@@ -213,7 +213,7 @@ export const DraftsTab = () => {
         trigger={
           <div className="button" style={{ position: "relative" }}>
             <Icon name="filter" />
-            {hasActiveFilters && (
+            {hasActiveFilters ? (
               <div
                 style={{
                   position: "absolute",
@@ -225,7 +225,7 @@ export const DraftsTab = () => {
                   borderRadius: "50%",
                 }}
               />
-            )}
+            ) : null}
           </div>
         }
       >
@@ -339,7 +339,7 @@ export const DraftsTab = () => {
         }}
       >
         {/* Active Filter Indicator */}
-        {hasActiveFilters && (
+        {hasActiveFilters ? (
           <div
             style={{
               backgroundColor: "#E3F2FD",
@@ -381,16 +381,16 @@ export const DraftsTab = () => {
               Clear filter
             </Button>
           </div>
-        )}
+        ) : null}
 
         {filteredInstallments.length === 0 && installments.length > 0 ? (
           <div style={{ textAlign: "center", padding: "48px 0" }}>
             <p>No drafts found matching your filters.</p>
-            {hasActiveFilters && (
+            {hasActiveFilters ? (
               <Button onClick={clearFilters} outline>
                 Clear filters
               </Button>
-            )}
+            ) : null}
           </div>
         ) : filteredInstallments.length > 0 ? (
           <>
@@ -424,7 +424,7 @@ export const DraftsTab = () => {
                         }}
                       >
                         <div style={{ minWidth: "80px", display: "flex" }}>
-                          {installment.internal_tag && (
+                          {installment.internal_tag ? (
                             <span
                               style={{
                                 backgroundColor: "#ffffff",
@@ -473,7 +473,7 @@ export const DraftsTab = () => {
                   <h2>{selectedInstallment.name}</h2>
                   <button className="close" aria-label="Close" onClick={() => setSelectedInstallmentId(null)} />
                 </header>
-                {selectedInstallment.internal_tag && (
+                {selectedInstallment.internal_tag ? (
                   <div>
                     <span
                       style={{
@@ -490,7 +490,7 @@ export const DraftsTab = () => {
                       {selectedInstallment.internal_tag}
                     </span>
                   </div>
-                )}
+                ) : null}
                 <div className="stack">
                   <div>
                     <h5>Sent to</h5>
