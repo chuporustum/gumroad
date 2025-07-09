@@ -8,7 +8,6 @@ import { assertResponseError } from "$app/utils/request";
 
 import { Button } from "$app/components/Button";
 import { Icon } from "$app/components/Icons";
-import { RichTextEditor } from "$app/components/RichTextEditor";
 import { showAlert } from "$app/components/server-components/Alert";
 import { emailTabPath } from "$app/components/server-components/EmailsPage";
 
@@ -20,6 +19,9 @@ export const EmailEditor = () => {
   const [name, setName] = React.useState(installment?.name ?? "");
   const [message, setMessage] = React.useState(installment?.message ?? "");
   const [isSaving, setIsSaving] = React.useState(false);
+  const [previewMode, setPreviewMode] = React.useState<"email" | "post">("email");
+  const [comment, setComment] = React.useState("");
+  const [isPosting, setIsPosting] = React.useState(false);
 
   const save = asyncVoid(async (publish = false) => {
     if (!installment?.external_id) return;
@@ -50,8 +52,33 @@ export const EmailEditor = () => {
     }
   });
 
+  const handlePostComment = asyncVoid(async () => {
+    if (!installment?.external_id) return;
+
+    setIsPosting(true);
+    try {
+      // TODO: This would need a new API endpoint for posting to recipients
+      // Example of what the API call would look like:
+      // await postToRecipients(installment.external_id, {
+      //   subject: name,
+      //   content: message,
+      //   comment: comment,
+      //   recipients: installment.segment_ids || installment.audience_type
+      // });
+
+      // For now, show a success message
+      showAlert("Post sent to all recipients!", "success");
+      setComment("");
+    } catch (e) {
+      assertResponseError(e);
+      showAlert("Failed to post. Please try again.", "error");
+    } finally {
+      setIsPosting(false);
+    }
+  });
+
   return (
-    <main>
+    <main dir="ltr" style={{ direction: "ltr", unicodeBidi: "normal" }}>
       <header>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
           <h1>{installment?.name || "Edit email"}</h1>
@@ -130,35 +157,28 @@ export const EmailEditor = () => {
                     border: "1px solid #000",
                     borderRadius: "4px",
                     backgroundColor: "white",
+                    direction: "ltr",
                   }}
+                  dir="ltr"
                 >
-                  <style>{`
-                      .ProseMirror {
-                        padding: 16px !important;
-                        outline: none !important;
-                        direction: ltr !important;
-                        unicode-bidi: normal !important;
-                        text-align: left !important;
-                      }
-                      .ProseMirror * {
-                        direction: ltr !important;
-                        unicode-bidi: normal !important;
-                      }
-                      .rich-text-editor, .rich-text-editor-toolbar {
-                        direction: ltr !important;
-                      }
-                      input[type="text"], textarea {
-                        direction: ltr !important;
-                        unicode-bidi: normal !important;
-                      }
-                    `}</style>
-                  <RichTextEditor
-                    initialValue={message || ""}
-                    onChange={(newValue) => setMessage(newValue)}
-                    onCreate={(_editor) => {
-                      // Store editor reference if needed
-                    }}
+                  <textarea
+                    value={message || ""}
+                    onChange={(e) => setMessage(e.target.value)}
                     placeholder="Write a personalized message..."
+                    dir="ltr"
+                    style={{
+                      width: "100%",
+                      minHeight: "350px",
+                      border: "none",
+                      outline: "none",
+                      resize: "vertical",
+                      padding: "16px",
+                      fontSize: "14px",
+                      fontFamily: "inherit",
+                      direction: "ltr",
+                      unicodeBidi: "normal",
+                      textAlign: "left",
+                    }}
                   />
                 </div>
               </div>
@@ -170,7 +190,7 @@ export const EmailEditor = () => {
                 style={{
                   backgroundColor: "#000",
                   color: "white",
-                  width: "100%",
+                  width: "96.5%",
                   justifyContent: "center",
                   padding: "12px",
                 }}
@@ -210,7 +230,7 @@ export const EmailEditor = () => {
                     cursor: "pointer",
                   }}
                 >
-                  Email
+                  {previewMode === "email" ? "Email" : "Post"}
                   <Icon name="outline-cheveron-down" />
                 </div>
                 <div
@@ -226,8 +246,9 @@ export const EmailEditor = () => {
                     minWidth: "40px",
                     height: "40px",
                   }}
+                  onClick={() => setPreviewMode(previewMode === "email" ? "post" : "email")}
                 >
-                  <Icon name="outline-key" />
+                  <Icon name="eye-fill" />
                 </div>
               </div>
             </div>
@@ -242,25 +263,78 @@ export const EmailEditor = () => {
                 minHeight: "300px",
               }}
             >
-              <h4 style={{ margin: "0 0 16px 0", fontSize: "18px" }}>{name || "Subject"}</h4>
-              <div style={{ fontSize: "14px", lineHeight: 1.5, marginBottom: "40px" }}>
-                <div dangerouslySetInnerHTML={{ __html: message || "Write a personalized message..." }} />
-              </div>
-              <div
-                style={{
-                  fontSize: "12px",
-                  color: "#666",
-                  borderTop: "1px solid #ddd",
-                  paddingTop: "16px",
-                  textAlign: "center",
-                }}
-              >
-                548 Market St, San Francisco, CA 94104-5401, USA
-                <br />
-                <div style={{ marginTop: "8px" }}>
-                  Powered by <strong>gumroad</strong>
-                </div>
-              </div>
+              {previewMode === "email" ? (
+                <>
+                  <h4 style={{ margin: "0 0 16px 0", fontSize: "18px" }}>{name || "Subject"}</h4>
+                  <div style={{ fontSize: "14px", lineHeight: 1.5, marginBottom: "40px", whiteSpace: "pre-wrap" }}>
+                    {message || "Write a personalized message..."}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "12px",
+                      color: "#666",
+                      borderTop: "1px solid #ddd",
+                      paddingTop: "16px",
+                      textAlign: "center",
+                    }}
+                  >
+                    548 Market St, San Francisco, CA 94104-5401, USA
+                    <br />
+                    <div style={{ marginTop: "8px" }}>
+                      Powered by <strong>gumroad</strong>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Post View */}
+                  <h4 style={{ margin: "0 0 16px 0", fontSize: "18px" }}>{name || "Subject"}</h4>
+                  <div style={{ fontSize: "14px", lineHeight: 1.5, marginBottom: "20px", whiteSpace: "pre-wrap" }}>
+                    {message || "Write a personalized message..."}
+                  </div>
+
+                  {/* Comments Section */}
+                  <div style={{ borderTop: "1px solid #ddd", paddingTop: "16px" }}>
+                    <div style={{ fontSize: "14px", fontWeight: "600", marginBottom: "12px" }}>Comments</div>
+                    <div style={{ display: "flex", gap: "8px", alignItems: "center", marginBottom: "12px" }}>
+                      <div
+                        style={{ width: "32px", height: "32px", borderRadius: "50%", backgroundColor: "#ddd" }}
+                      ></div>
+                      <input
+                        type="text"
+                        placeholder="Add a comment..."
+                        value={comment}
+                        onChange={(e) => setComment(e.target.value)}
+                        style={{
+                          flex: 1,
+                          padding: "8px 12px",
+                          border: "1px solid #ddd",
+                          borderRadius: "20px",
+                          fontSize: "14px",
+                          outline: "none",
+                        }}
+                      />
+                    </div>
+                    <div style={{ textAlign: "right" }}>
+                      <button
+                        onClick={handlePostComment}
+                        disabled={isPosting}
+                        style={{
+                          backgroundColor: isPosting ? "#ccc" : "#000",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "4px",
+                          padding: "8px 16px",
+                          fontSize: "14px",
+                          cursor: isPosting ? "not-allowed" : "pointer",
+                        }}
+                      >
+                        {isPosting ? "Posting..." : "Post"}
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

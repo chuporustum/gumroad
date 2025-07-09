@@ -15,7 +15,7 @@ aside {
   @include breakpoint-up(lg) {
     border-left: $border;
     grid-column: 2;
-    width: 40vw;
+    width: 32vw;
   }
 
   & > header {

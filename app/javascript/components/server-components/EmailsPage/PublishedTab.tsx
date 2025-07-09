@@ -7,7 +7,7 @@ import { assertDefined } from "$app/utils/assert";
 import { formatStatNumber } from "$app/utils/formatStatNumber";
 import { AbortError, assertResponseError } from "$app/utils/request";
 
-import { Button, NavigationButton } from "$app/components/Button";
+import { Button } from "$app/components/Button";
 import { useCurrentSeller } from "$app/components/CurrentSeller";
 import { Icon } from "$app/components/Icons";
 import { Modal } from "$app/components/Modal";
@@ -18,7 +18,6 @@ import {
   Layout,
   NewEmailButton,
   useSearchContext,
-  ViewEmailButton,
 } from "$app/components/server-components/EmailsPage";
 import { useDebouncedCallback } from "$app/components/useDebouncedCallback";
 import { useOnChange } from "$app/components/useOnChange";
@@ -39,9 +38,20 @@ export const PublishedTab = () => {
     state: "delete-confirmation" | "deleting";
   } | null>(null);
   const [isLoading, setIsLoading] = React.useState(false);
+  const [resendSubject, setResendSubject] = React.useState("");
+  const [resendPreheader, setResendPreheader] = React.useState("");
+  const [isResending, setIsResending] = React.useState(false);
   const selectedInstallment = selectedInstallmentId
     ? (installments.find((i) => i.external_id === selectedInstallmentId) ?? null)
     : null;
+
+  // Initialize resend form when installment is selected
+  React.useEffect(() => {
+    if (selectedInstallment) {
+      setResendSubject(selectedInstallment.name);
+      setResendPreheader(selectedInstallment.preheader || "");
+    }
+  }, [selectedInstallment]);
 
   const [query] = useSearchContext();
   const activeFetchRequest = React.useRef<{ cancel: () => void } | null>(null);
@@ -111,7 +121,7 @@ export const PublishedTab = () => {
                   <th>Opened</th>
                   <th>Clicks</th>
                   <th>
-                    Views{" "}
+                    Post Views{" "}
                     <div
                       className="has-tooltip top"
                       aria-describedby={`views-tooltip-${uid}`}
@@ -119,7 +129,7 @@ export const PublishedTab = () => {
                     >
                       <Icon name="info-circle" />
                       <div role="tooltip" id={`views-tooltip-${uid}`}>
-                        Views only apply to emails published on your profile.
+                        Post Views only apply to emails published on your profile.
                       </div>
                     </div>
                   </th>
@@ -134,21 +144,23 @@ export const PublishedTab = () => {
                   >
                     <td data-label="Subject">
                       <div style={{ display: "flex", alignItems: "center", gap: "var(--spacer-2)" }}>
-                        <span>{installment.name}</span>
                         {installment.internal_tag && (
                           <span
                             style={{
-                              backgroundColor: "var(--color-secondary)",
-                              color: "var(--color-text-secondary)",
-                              padding: "2px 6px",
-                              borderRadius: "3px",
+                              backgroundColor: "transparent",
+                              color: "#333",
+                              padding: "4px 8px",
+                              borderRadius: "4px",
                               fontSize: "0.75rem",
                               fontWeight: "500",
+                              border: "1px solid #000",
+                              display: "inline-block",
                             }}
                           >
                             {installment.internal_tag}
                           </span>
                         )}
+                        <span>{installment.name}</span>
                       </div>
                     </td>
                     <td data-label="Date" style={{ whiteSpace: "nowrap" }}>
@@ -160,12 +172,10 @@ export const PublishedTab = () => {
                       })}
                     </td>
                     <td data-label="Emailed" style={{ whiteSpace: "nowrap" }}>
-                      {installment.send_emails ? formatStatNumber({ value: installment.sent_count }) : "n/a"}
+                      {installment.send_emails ? formatStatNumber({ value: installment.sent_count }) : "0"}
                     </td>
                     <td data-label="Opened" style={{ whiteSpace: "nowrap" }}>
-                      {installment.send_emails
-                        ? formatStatNumber({ value: installment.open_rate, suffix: "%" })
-                        : "n/a"}
+                      {installment.send_emails ? formatStatNumber({ value: installment.open_count }) : "0"}
                     </td>
                     <td data-label="Clicks" style={{ whiteSpace: "nowrap" }}>
                       {installment.clicked_urls.length > 0 ? (
@@ -197,7 +207,7 @@ export const PublishedTab = () => {
                         formatStatNumber({ value: installment.click_count })
                       )}
                     </td>
-                    <td data-label="Views" style={{ whiteSpace: "nowrap" }}>
+                    <td data-label="Post Views" style={{ whiteSpace: "nowrap" }}>
                       {formatStatNumber({
                         value: installment.view_count,
                         placeholder: "n/a",
@@ -222,12 +232,13 @@ export const PublishedTab = () => {
                   <div>
                     <span
                       style={{
-                        backgroundColor: "var(--color-secondary)",
-                        color: "var(--color-text-secondary)",
+                        backgroundColor: "transparent",
+                        color: "#333",
                         padding: "4px 8px",
                         borderRadius: "4px",
                         fontSize: "0.75rem",
                         fontWeight: "500",
+                        border: "1px solid #000",
                         display: "inline-block",
                         marginBottom: "var(--spacer-3)",
                       }}
@@ -247,41 +258,214 @@ export const PublishedTab = () => {
                     <h5>Emailed</h5>
                     {selectedInstallment.send_emails
                       ? formatStatNumber({ value: selectedInstallment.sent_count })
-                      : "n/a"}
+                      : "0"}
                   </div>
                   <div>
                     <h5>Opened</h5>
                     {selectedInstallment.send_emails
                       ? selectedInstallment.open_rate !== null
                         ? `${formatStatNumber({ value: selectedInstallment.open_count })} (${formatStatNumber({ value: selectedInstallment.open_rate, suffix: "%" })})`
-                        : formatStatNumber({ value: selectedInstallment.open_rate })
-                      : "n/a"}
+                        : formatStatNumber({ value: selectedInstallment.open_count })
+                      : "0"}
                   </div>
                   <div>
                     <h5>Clicks</h5>
                     {selectedInstallment.send_emails
                       ? selectedInstallment.click_rate !== null
                         ? `${formatStatNumber({ value: selectedInstallment.click_count })} (${formatStatNumber({ value: selectedInstallment.click_rate, suffix: "%" })})`
-                        : formatStatNumber({ value: selectedInstallment.click_rate })
-                      : "n/a"}
+                        : formatStatNumber({ value: selectedInstallment.click_count })
+                      : "0"}
                   </div>
                   <div>
-                    <h5>Views</h5>
+                    <h5>Bounced</h5>
+                    {selectedInstallment.send_emails
+                      ? formatStatNumber({ value: selectedInstallment.bounce_count || 0 })
+                      : "0"}
+                  </div>
+                  <div>
+                    <h5>Unsubscribers</h5>
+                    {selectedInstallment.send_emails
+                      ? formatStatNumber({ value: selectedInstallment.unsubscribe_count || 0 })
+                      : "0"}
+                  </div>
+                  <div>
+                    <h5>Post Views</h5>
                     {formatStatNumber({
                       value: selectedInstallment.view_count,
                       placeholder: "n/a",
                     })}
                   </div>
                 </div>
-                <div style={{ display: "grid", gridAutoFlow: "column", gap: "var(--spacer-4)" }}>
-                  {selectedInstallment.send_emails ? <ViewEmailButton installment={selectedInstallment} /> : null}
-                  {selectedInstallment.shown_on_profile ? (
-                    <NavigationButton href={selectedInstallment.full_url} target="_blank" rel="noopener noreferrer">
-                      <Icon name="file-earmark-medical-fill"></Icon>
-                      View post
-                    </NavigationButton>
-                  ) : null}
+
+                {/* Resend to unopens section */}
+                <div
+                  style={{
+                    border: "1px solid #000",
+                    borderRadius: "4px",
+                    padding: "var(--spacer-4)",
+                    display: "grid",
+                    gap: "var(--spacer-3)",
+                    backgroundColor: "white",
+                  }}
+                >
+                  <div
+                    style={{
+                      borderBottom: "1px solid #ddd",
+                      paddingBottom: "var(--spacer-2)",
+                      marginBottom: "var(--spacer-1)",
+                    }}
+                  >
+                    <h4 style={{ margin: 0, fontSize: "16px", fontWeight: "600" }}>Resend to unopens</h4>
+                  </div>
+
+                  <div>
+                    <label
+                      style={{ fontSize: "14px", fontWeight: "500", marginBottom: "var(--spacer-1)", display: "block" }}
+                    >
+                      Subject
+                    </label>
+                    <input
+                      type="text"
+                      value={resendSubject}
+                      onChange={(e) => setResendSubject(e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "12px 16px",
+                        border: "1px solid #000",
+                        borderRadius: "4px",
+                        fontSize: "14px",
+                        boxSizing: "border-box",
+                        backgroundColor: "white",
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      style={{ fontSize: "14px", fontWeight: "500", marginBottom: "var(--spacer-1)", display: "block" }}
+                    >
+                      Preheader
+                    </label>
+                    <input
+                      type="text"
+                      value={resendPreheader}
+                      onChange={(e) => setResendPreheader(e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "12px 16px",
+                        border: "1px solid #000",
+                        borderRadius: "4px",
+                        fontSize: "14px",
+                        boxSizing: "border-box",
+                        backgroundColor: "white",
+                      }}
+                    />
+                  </div>
+
+                  <Button
+                    color="primary"
+                    style={{
+                      backgroundColor: "#000",
+                      color: "white",
+                      width: "100%",
+                      justifyContent: "center",
+                      padding: "12px",
+                      fontSize: "14px",
+                      fontWeight: "500",
+                      borderRadius: "4px",
+                      border: "none",
+                      boxSizing: "border-box",
+                    }}
+                    disabled={isResending || !resendSubject.trim()}
+                    onClick={async () => {
+                      if (!selectedInstallment || !resendSubject.trim()) return;
+
+                      setIsResending(true);
+                      try {
+                        // TODO: Implement API call to resend email to unopens
+                        // Example of what the API call would look like:
+                        // await resendToUnopens(selectedInstallment.external_id, {
+                        //   subject: resendSubject,
+                        //   preheader: resendPreheader,
+                        //   message: selectedInstallment.message
+                        // });
+
+                        showAlert("Email resent to recipients who haven't opened!", "success");
+                      } catch (e) {
+                        assertResponseError(e);
+                        showAlert("Failed to resend email. Please try again.", "error");
+                      } finally {
+                        setIsResending(false);
+                      }
+                    }}
+                  >
+                    {isResending ? "Resending..." : "Resend email"}
+                  </Button>
                 </div>
+
+                {/* Action buttons */}
+                <div style={{ display: "grid", gap: "var(--spacer-3)" }}>
+                  <Button
+                    style={{
+                      width: "100%",
+                      justifyContent: "center",
+                      padding: "12px",
+                      fontSize: "14px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "var(--spacer-2)",
+                      border: "1px solid #000",
+                      borderRadius: "4px",
+                      backgroundColor: "white",
+                      color: "#000",
+                      boxSizing: "border-box",
+                    }}
+                  >
+                    <Icon name="people-fill" />
+                    View Recipients
+                  </Button>
+
+                  <Button
+                    style={{
+                      width: "100%",
+                      justifyContent: "center",
+                      padding: "12px",
+                      fontSize: "14px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "var(--spacer-2)",
+                      border: "1px solid #000",
+                      borderRadius: "4px",
+                      backgroundColor: "white",
+                      color: "#000",
+                      boxSizing: "border-box",
+                    }}
+                  >
+                    <Icon name="envelope-fill" />
+                    View Email
+                  </Button>
+
+                  <Button
+                    style={{
+                      width: "100%",
+                      justifyContent: "center",
+                      padding: "12px",
+                      fontSize: "14px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "var(--spacer-2)",
+                      border: "1px solid #000",
+                      borderRadius: "4px",
+                      backgroundColor: "white",
+                      color: "#000",
+                      boxSizing: "border-box",
+                    }}
+                  >
+                    <Icon name="file-earmark-text-fill" />
+                    View Post
+                  </Button>
+                </div>
+
                 <div style={{ display: "grid", gridAutoFlow: "column", gap: "var(--spacer-4)" }}>
                   <NewEmailButton copyFrom={selectedInstallment.external_id} />
                   <EditEmailButton id={selectedInstallment.external_id} />
