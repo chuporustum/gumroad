@@ -2,6 +2,7 @@ import React from "react";
 import { useParams } from "react-router-dom";
 
 import { getSegment, type Segment } from "$app/data/segments";
+
 import { LoadingSpinner } from "$app/components/LoadingSpinner";
 import { showAlert } from "$app/components/server-components/Alert";
 

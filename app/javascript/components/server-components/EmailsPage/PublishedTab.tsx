@@ -144,7 +144,7 @@ export const PublishedTab = () => {
                   >
                     <td data-label="Subject">
                       <div style={{ display: "flex", alignItems: "center", gap: "var(--spacer-2)" }}>
-                        {installment.internal_tag && (
+                        {installment.internal_tag ? (
                           <span
                             style={{
                               backgroundColor: "transparent",
@@ -159,7 +159,7 @@ export const PublishedTab = () => {
                           >
                             {installment.internal_tag}
                           </span>
-                        )}
+                        ) : null}
                         <span>{installment.name}</span>
                       </div>
                     </td>
@@ -228,7 +228,7 @@ export const PublishedTab = () => {
                   <h2>{selectedInstallment.name}</h2>
                   <button className="close" aria-label="Close" onClick={() => setSelectedInstallmentId(null)} />
                 </header>
-                {selectedInstallment.internal_tag && (
+                {selectedInstallment.internal_tag ? (
                   <div>
                     <span
                       style={{
@@ -246,7 +246,7 @@ export const PublishedTab = () => {
                       {selectedInstallment.internal_tag}
                     </span>
                   </div>
-                )}
+                ) : null}
                 <div className="stack">
                   <div>
                     <h5>Sent</h5>

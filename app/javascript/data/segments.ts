@@ -1,5 +1,6 @@
 export type FilterType = "date" | "product" | "payment" | "location" | "email_engagement";
 
+// API FilterConfig for backend communication
 export type FilterConfig = {
   // Common fields
   operator?:
@@ -52,6 +53,53 @@ export type FilterConfig = {
   days?: number;
   engagement_type?: "opened" | "clicked" | "not_opened" | "not_clicked";
 };
+
+// UI FilterConfig for frontend components (string values for form inputs)
+export interface UIFilterValue {
+  // Date filters
+  date?: string;
+  start_date?: string;
+  end_date?: string;
+
+  // Product filters
+  product_ids?: string[];
+
+  // Payment filters
+  amount?: string;
+  min_amount?: string;
+  max_amount?: string;
+
+  // Location filters
+  location?: string;
+  country?: string;
+
+  // Email engagement filters
+  days?: string;
+  engagement_type?: "opened" | "clicked" | "not_opened" | "not_clicked";
+}
+
+export interface UIFilterConfig {
+  filter_type: FilterType;
+  operator:
+    | "joining"
+    | "affiliation"
+    | "following"
+    | "purchase"
+    | "has_opened_in_last"
+    | "has_not_opened_in_last"
+    | "is_affiliated_to"
+    | "is_member_of"
+    | "has_bought"
+    | "has_not_yet_bought"
+    | "is_equal_to"
+    | "is_less_than"
+    | "is_more_than"
+    | "is"
+    | "is_not";
+  third_operator?: "is_after" | "is_before" | "is_in_last" | "all" | "any" | undefined;
+  value: UIFilterValue;
+  connector?: "and" | "or" | null;
+}
 
 export type AudienceMemberFilter = {
   id?: number;
@@ -132,61 +180,61 @@ async function makeRequest(url: string, options: RequestInit = {}) {
   return response;
 }
 
-export async function getSegments() {
+export async function getSegments(): Promise<{ segments: Segment[] }> {
   const response = await makeRequest("/internal/segments");
-  return (await response.json()) as { segments: Segment[] };
+  return await response.json();
 }
 
-export async function getSegment(id: number) {
+export async function getSegment(id: number): Promise<{ segment: Segment }> {
   const response = await makeRequest(`/internal/segments/${id}`);
-  return (await response.json()) as { segment: Segment };
+  return await response.json();
 }
 
-export async function createSegment(payload: CreateSegmentPayload) {
+export async function createSegment(payload: CreateSegmentPayload): Promise<Segment> {
   const response = await makeRequest("/internal/segments", {
     method: "POST",
     body: JSON.stringify(payload),
   });
 
-  const responseData = (await response.json()) as { success: boolean; segment: Segment; errors?: string[] };
+  const responseData: { success: boolean; segment: Segment; errors?: string[] } = await response.json();
   if (!responseData.success) throw new Error(responseData.errors?.join(", ") || "Failed to create segment");
 
   return responseData.segment;
 }
 
-export async function updateSegment(id: number, payload: UpdateSegmentPayload) {
+export async function updateSegment(id: number, payload: UpdateSegmentPayload): Promise<Segment> {
   const response = await makeRequest(`/internal/segments/${id}`, {
     method: "PUT",
     body: JSON.stringify(payload),
   });
 
-  const responseData = (await response.json()) as { success: boolean; segment: Segment; errors?: string[] };
+  const responseData: { success: boolean; segment: Segment; errors?: string[] } = await response.json();
   if (!responseData.success) throw new Error(responseData.errors?.join(", ") || "Failed to update segment");
 
   return responseData.segment;
 }
 
-export async function deleteSegment(id: number) {
+export async function deleteSegment(id: number): Promise<{ success: boolean }> {
   const response = await makeRequest(`/internal/segments/${id}`, {
     method: "DELETE",
   });
 
-  const responseData = (await response.json()) as { success: boolean };
+  const responseData: { success: boolean } = await response.json();
   if (!responseData.success) throw new Error("Failed to delete segment");
 
   return responseData;
 }
 
-export async function previewSegment(payload: CreateSegmentPayload) {
+export async function previewSegment(payload: CreateSegmentPayload): Promise<SegmentPreview> {
   const response = await makeRequest("/internal/segments/preview", {
     method: "POST",
     body: JSON.stringify(payload),
   });
 
-  return (await response.json()) as SegmentPreview;
+  return await response.json();
 }
 
-export async function generateWithAI(prompt: string) {
+export async function generateWithAI(prompt: string): Promise<AIGenerationResponse> {
   const currentDate = new Date().toISOString().split("T")[0];
   const contextualPrompt = `Current date: ${currentDate}. ${prompt}`;
 
@@ -198,7 +246,7 @@ export async function generateWithAI(prompt: string) {
     }),
   });
 
-  const responseData = (await response.json()) as AIGenerationResponse;
+  const responseData: AIGenerationResponse = await response.json();
 
   if (!responseData.success) {
     let userFriendlyError =

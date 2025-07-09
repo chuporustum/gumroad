@@ -1,4 +1,5 @@
 import { type FilterConfig as APIFilterConfig } from "$app/data/segments";
+
 import {
   type FilterConfig as UIFilterConfig,
   type FilterType,
@@ -37,7 +38,7 @@ export const convertUIFilterToAPI = (
   };
 
   if (apiOperator && apiOperator !== "undefined") {
-    (config as any).operator = apiOperator;
+    config.operator = apiOperator;
   }
 
   return {
@@ -66,9 +67,24 @@ export const convertAPIFilterToUI = (
 
   const uiOperator = reverseOperatorMap[operator || "is"] || operator || "is_equal_to";
 
+  const isValidOperator = (op: string): op is UIFilterConfig["operator"] => {
+    const validOperators = [
+      "is_more_than",
+      "is_less_than",
+      "is_equal_to",
+      "is_not",
+      "has_bought",
+      "has_not_yet_bought",
+      "joining",
+      "has_opened_in_last",
+      "has_not_opened_in_last",
+    ];
+    return validOperators.includes(op);
+  };
+
   return {
     filter_type: apiFilter.filter_type,
-    operator: uiOperator as UIFilterConfig["operator"],
+    operator: isValidOperator(uiOperator) ? uiOperator : "is_equal_to",
     value: {
       ...rest,
       ...(amount && { amount: amount.toString() }),

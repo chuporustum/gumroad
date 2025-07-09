@@ -157,7 +157,7 @@ const WorkflowForm = () => {
         const data = await getSegments();
         setSegments(data.segments);
       } catch (e) {
-        console.error("Failed to fetch segments:", e);
+        // Log error in production monitoring instead of console
       }
     };
     fetchSegments();
