@@ -53,6 +53,8 @@ export type PublishedInstallment = SavedInstallment & {
   open_rate: number | null;
   view_count: number | null;
   published_at: string;
+  bounce_count?: number;
+  unsubscribe_count?: number;
 };
 
 export type ScheduledInstallment = SavedInstallment & {

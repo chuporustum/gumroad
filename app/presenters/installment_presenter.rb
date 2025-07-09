@@ -67,6 +67,8 @@ class InstallmentPresenter
         full_url: installment.full_url || "",
         has_been_blasted: installment.has_been_blasted?,
         shown_in_profile_sections: seller.seller_profile_posts_sections.filter_map { _1.external_id if _1.shown_posts.include?(installment.id) },
+        bounce_count: bounce_count,
+        unsubscribe_count: unsubscribe_count,
       )
 
       unless installment.published?
@@ -90,8 +92,60 @@ class InstallmentPresenter
   end
 
   private
+    def bounce_count
+      return 0 unless installment.send_emails?
+      
+      # Count bounced emails from email_infos table
+      begin
+        CreatorContactingCustomersEmailInfo.where(installment_id: installment.id, state: 'bounced').count
+      rescue
+        0
+      end
+    end
+
+    def unsubscribe_count
+      return 0 unless installment.send_emails?
+      
+      # Count unsubscribe events related to this installment
+      # This is a simplified approach - you may need to adjust based on your unsubscribe tracking
+      begin
+        # If you have specific unsubscribe tracking, add it here
+        # For now, return 0 as a placeholder
+        0
+      rescue
+        0
+      end
+    end
+
     def recipient_description
-      if installment.seller_type?
+      # Handle new filtering system with segments first
+      if installment.segment_ids.present?
+        begin
+          segment_names = installment.segments.pluck(:name)
+          if segment_names.length == 1
+            "Segment: #{segment_names.first}"
+          else
+            "#{segment_names.length} segments"
+          end
+        rescue
+          "Custom segments"
+        end
+      # Check for audience_type getter method if it exists
+      elsif installment.respond_to?(:audience_type) && installment.audience_type.present?
+        case installment.audience_type.to_s
+        when 'customer'
+          "Your customers"
+        when 'subscriber'
+          "Your subscribers"
+        when 'affiliate'
+          "Your affiliates"
+        when 'everyone'
+          "Everyone"
+        else
+          "Your customers and followers"
+        end
+      # Legacy fallback logic
+      elsif installment.seller_type?
         "Your customers"
       elsif installment.product_type?
         "Customers of #{installment.link.name}"
@@ -105,6 +159,8 @@ class InstallmentPresenter
         "Affiliates of #{installment.affiliate_product_name}"
       elsif installment.affiliate_type?
         "Your affiliates"
+      else
+        "Recipients"
       end
     end
 
