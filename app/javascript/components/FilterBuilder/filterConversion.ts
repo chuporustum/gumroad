@@ -35,9 +35,10 @@ export const convertUIFilterToAPI = (
     ...(min_amount && { min_amount_cents: Math.round(parseFloat(min_amount) * 100) }),
     ...(max_amount && { max_amount_cents: Math.round(parseFloat(max_amount) * 100) }),
     ...(days && { days: parseInt(days, 10) }),
-    ...(product_ids && Array.isArray(product_ids) && { 
-      product_ids: product_ids.map(id => parseInt(id, 10)).filter(id => !isNaN(id))
-    }),
+    ...(product_ids &&
+      Array.isArray(product_ids) && {
+        product_ids: product_ids.map((id) => parseInt(id, 10)).filter((id) => !isNaN(id)),
+      }),
   };
 
   if (apiOperator && apiOperator !== "undefined") {
@@ -54,7 +55,8 @@ export const convertAPIFilterToUI = (
   apiFilter: { filter_type: FilterType; config: APIFilterConfig },
   filterIndex: number,
 ): UIFilterConfig => {
-  const { operator, amount, amount_cents, min_amount_cents, max_amount_cents, days, product_ids, ...rest } = apiFilter.config;
+  const { operator, amount, amount_cents, min_amount_cents, max_amount_cents, days, product_ids, ...rest } =
+    apiFilter.config;
 
   const reverseOperatorMap: Record<string, string> = {
     is_more_than: "is_more_than",
@@ -95,9 +97,10 @@ export const convertAPIFilterToUI = (
       ...(min_amount_cents && { min_amount: (min_amount_cents / 100).toString() }),
       ...(max_amount_cents && { max_amount: (max_amount_cents / 100).toString() }),
       ...(days && { days: days.toString() }),
-      ...(product_ids && Array.isArray(product_ids) && { 
-        product_ids: product_ids.map(id => id.toString())
-      }),
+      ...(product_ids &&
+        Array.isArray(product_ids) && {
+          product_ids: product_ids.map((id) => id.toString()),
+        }),
     },
     connector: filterIndex === 0 ? null : "and",
   };

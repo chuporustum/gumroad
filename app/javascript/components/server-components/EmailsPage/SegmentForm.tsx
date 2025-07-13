@@ -117,9 +117,10 @@ const convertUIFilterToAPI = (uiFilter: UIFilterConfig): { filter_type: FilterTy
     // Convert days to number for email engagement filters
     ...(days && { days: parseInt(days, 10) }),
     // Convert product IDs to integers for API
-    ...(product_ids && Array.isArray(product_ids) && { 
-      product_ids: product_ids.map(id => parseInt(id, 10)).filter(id => !isNaN(id))
-    }),
+    ...(product_ids &&
+      Array.isArray(product_ids) && {
+        product_ids: product_ids.map((id) => parseInt(id, 10)).filter((id) => !isNaN(id)),
+      }),
   };
 
   // Add operator only if it's defined and not undefined
@@ -137,7 +138,8 @@ const convertAPIFilterToUI = (
   apiFilter: { filter_type: FilterType; config: FilterConfig },
   filterIndex: number,
 ): UIFilterConfig => {
-  const { operator, amount, amount_cents, min_amount_cents, max_amount_cents, days, product_ids, ...rest } = apiFilter.config;
+  const { operator, amount, amount_cents, min_amount_cents, max_amount_cents, days, product_ids, ...rest } =
+    apiFilter.config;
 
   // Map API operators back to UI operators
   const reverseOperatorMap: Record<string, string> = {
@@ -167,9 +169,10 @@ const convertAPIFilterToUI = (
       // Convert days to string for UI
       ...(days && { days: days.toString() }),
       // Convert product IDs to strings for UI
-      ...(product_ids && Array.isArray(product_ids) && { 
-        product_ids: product_ids.map(id => id.toString())
-      }),
+      ...(product_ids &&
+        Array.isArray(product_ids) && {
+          product_ids: product_ids.map((id) => id.toString()),
+        }),
     },
     connector: filterIndex === 0 ? null : "and",
   };

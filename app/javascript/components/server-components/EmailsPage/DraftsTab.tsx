@@ -173,26 +173,28 @@ export const DraftsTab = () => {
   }, [installments]);
 
   // Filter installments client-side based on selected filters
-  const filteredInstallments = React.useMemo(() => 
-    installments.filter((installment) => {
-      // Type filter
-      if (selectedType !== "all") {
-        const installmentType = installment.installment_type || "audience";
-        if (installmentType !== selectedType) {
-          return false;
+  const filteredInstallments = React.useMemo(
+    () =>
+      installments.filter((installment) => {
+        // Type filter
+        if (selectedType !== "all") {
+          const installmentType = installment.installment_type || "audience";
+          if (installmentType !== selectedType) {
+            return false;
+          }
         }
-      }
 
-      // Tag filter
-      if (selectedTags.length > 0) {
-        if (!installment.internal_tag || !selectedTags.includes(installment.internal_tag)) {
-          return false;
+        // Tag filter
+        if (selectedTags.length > 0) {
+          if (!installment.internal_tag || !selectedTags.includes(installment.internal_tag)) {
+            return false;
+          }
         }
-      }
 
-      return true;
-    }),
-  [installments, selectedType, selectedTags]);
+        return true;
+      }),
+    [installments, selectedType, selectedTags],
+  );
 
   const clearFilters = () => {
     setSelectedType("all");

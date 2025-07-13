@@ -13,10 +13,34 @@ class SendPostBlastEmailsJob
 
     @blast.update!(started_at: Time.current) if @blast.started_at.nil?
 
-    @filters = @post.audience_members_filter_params
+    # SEGMENTS INTEGRATION: Check for segments first, then fall back to legacy filters
     # The filter query can be expensive to run, it's better to run it on the replica DB.
     Makara::Context.release_all
-    @members = AudienceMember.filter(seller_id: @post.seller_id, params: @filters, with_ids: true).select(:id, :email, :purchase_id, :follower_id, :affiliate_id).to_a
+    
+    if @post.segments.any?
+      Rails.logger.info("[#{self.class.name}] Using segment-based audience selection for #{@post.segments.count} segments")
+      
+      # Get audience members from segments (OR logic between segments)
+      segment_audience_ids = Set.new
+      @post.segments.each do |segment|
+        segment_members = segment.filter(@post.seller_id).pluck(:id)
+        Rails.logger.info("[#{self.class.name}] Segment '#{segment.name}' matched #{segment_members.count} members")
+        segment_audience_ids.merge(segment_members)
+      end
+      
+      Rails.logger.info("[#{self.class.name}] Total unique audience members from segments: #{segment_audience_ids.size}")
+      @members = AudienceMember.where(id: segment_audience_ids.to_a)
+                               .select(:id, :email, :purchase_id, :follower_id, :affiliate_id)
+                               .to_a
+    else
+      Rails.logger.info("[#{self.class.name}] Using legacy filter-based audience selection")
+      
+      # Fall back to legacy filters
+      @filters = @post.audience_members_filter_params
+      @members = AudienceMember.filter(seller_id: @post.seller_id, params: @filters, with_ids: true)
+                               .select(:id, :email, :purchase_id, :follower_id, :affiliate_id)
+                               .to_a
+    end
 
     # We will check each batch of emails to see if they were already messaged,
     # but we can already remove all of the ones we know have already been emailed, ahead of time (faster).
