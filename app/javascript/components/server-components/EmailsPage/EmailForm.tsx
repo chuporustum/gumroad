@@ -541,7 +541,7 @@ export const EmailForm = () => {
                               }
                             }}
                           >
-                            <Icon name={opt.icon} style={{ fontSize: "2rem" }} />
+                            <Icon name={opt.icon as any} style={{ fontSize: "2rem" }} />
                             <div>
                               <h4>{opt.title}</h4>
                               <div id={`${opt.id}-description`}>{opt.description}</div>

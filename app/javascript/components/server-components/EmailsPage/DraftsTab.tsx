@@ -424,7 +424,7 @@ export const DraftsTab = () => {
                         }}
                       >
                         <div style={{ minWidth: "80px", display: "flex" }}>
-                          {installment.internal_tag ? (
+                          {installment.internal_tag && (
                             <span
                               style={{
                                 backgroundColor: "#ffffff",
@@ -516,7 +516,7 @@ export const DraftsTab = () => {
                   {selectedInstallment.send_emails ? <ViewEmailButton installment={selectedInstallment} /> : null}
                   {selectedInstallment.shown_on_profile ? (
                     <NavigationButton href={selectedInstallment.full_url} target="_blank" rel="noopener noreferrer">
-                      <Icon name="file-earmark-medical-fill"></Icon>
+                      <Icon name="file-earmark-medical-fill" />
                       View post
                     </NavigationButton>
                   ) : null}

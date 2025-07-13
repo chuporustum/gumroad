@@ -268,7 +268,7 @@ class Api::Internal::SegmentsController < Api::Internal::BaseController
   end
 
   def segment_params
-    params.require(:segment).permit(:name, :audience_type)
+    params.require(:segment).permit(:name, :audience_type, :description)
   end
 
   def serialize_filter_config(config)

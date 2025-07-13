@@ -57,7 +57,7 @@ const GroupConnectorDropdown: React.FC<{
               onClick={() => {
                 const validLogic = option.id === "and" || option.id === "or";
                 if (validLogic) {
-                  onChange(option.id);
+                  onChange(option.id as "and" | "or");
                 }
                 close();
               }}

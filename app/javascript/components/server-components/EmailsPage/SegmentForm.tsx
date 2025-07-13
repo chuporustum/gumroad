@@ -7,7 +7,7 @@ import {
   generateWithAI,
   previewSegment,
   updateSegment,
-  type FilterConfig as APIFilterConfig,
+  type FilterConfig,
   type AudienceMemberFilterGroup,
   type Segment,
 } from "$app/data/segments";
@@ -85,8 +85,8 @@ const AudienceDropdown: React.FC<{
 };
 
 // Helper functions to convert between UI and API filter formats
-const convertUIFilterToAPI = (uiFilter: UIFilterConfig): { filter_type: FilterType; config: APIFilterConfig } => {
-  const { amount, min_amount, max_amount, days, ...otherValues } = uiFilter.value;
+const convertUIFilterToAPI = (uiFilter: UIFilterConfig): { filter_type: FilterType; config: FilterConfig } => {
+  const { amount, min_amount, max_amount, days, product_ids, ...otherValues } = uiFilter.value;
 
   // Map UI operators to API operators
   const operatorMap: Record<string, string> = {
@@ -108,14 +108,18 @@ const convertUIFilterToAPI = (uiFilter: UIFilterConfig): { filter_type: FilterTy
 
   const apiOperator = operatorMap[uiFilter.operator] || uiFilter.operator || "is";
 
-  const config: APIFilterConfig = {
+  const config: FilterConfig = {
     ...otherValues,
-    // Convert string amounts to numbers for API
-    ...(amount && { amount: parseFloat(amount) }),
+    // Convert string amounts to cents for API
+    ...(amount && { amount_cents: Math.round(parseFloat(amount) * 100) }),
     ...(min_amount && { min_amount_cents: Math.round(parseFloat(min_amount) * 100) }),
     ...(max_amount && { max_amount_cents: Math.round(parseFloat(max_amount) * 100) }),
     // Convert days to number for email engagement filters
     ...(days && { days: parseInt(days, 10) }),
+    // Convert product IDs to integers for API
+    ...(product_ids && Array.isArray(product_ids) && { 
+      product_ids: product_ids.map(id => parseInt(id, 10)).filter(id => !isNaN(id))
+    }),
   };
 
   // Add operator only if it's defined and not undefined
@@ -130,10 +134,10 @@ const convertUIFilterToAPI = (uiFilter: UIFilterConfig): { filter_type: FilterTy
 };
 
 const convertAPIFilterToUI = (
-  apiFilter: { filter_type: FilterType; config: APIFilterConfig },
+  apiFilter: { filter_type: FilterType; config: FilterConfig },
   filterIndex: number,
 ): UIFilterConfig => {
-  const { operator, amount, amount_cents, min_amount_cents, max_amount_cents, days, ...rest } = apiFilter.config;
+  const { operator, amount, amount_cents, min_amount_cents, max_amount_cents, days, product_ids, ...rest } = apiFilter.config;
 
   // Map API operators back to UI operators
   const reverseOperatorMap: Record<string, string> = {
@@ -162,6 +166,10 @@ const convertAPIFilterToUI = (
       ...(max_amount_cents && { max_amount: (max_amount_cents / 100).toString() }),
       // Convert days to string for UI
       ...(days && { days: days.toString() }),
+      // Convert product IDs to strings for UI
+      ...(product_ids && Array.isArray(product_ids) && { 
+        product_ids: product_ids.map(id => id.toString())
+      }),
     },
     connector: filterIndex === 0 ? null : "and",
   };

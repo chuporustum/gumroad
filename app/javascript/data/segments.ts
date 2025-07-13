@@ -36,7 +36,7 @@ export type FilterConfig = {
   end_date?: string;
 
   // Product filter config
-  product_ids?: string[];
+  product_ids?: number[];
 
   // Payment filter config
   amount?: number;

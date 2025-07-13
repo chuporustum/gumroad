@@ -427,7 +427,7 @@ export const FilterRow: React.FC<FilterRowProps> = ({ filter, onUpdate, onRemove
             onUpdate({
               ...filter,
               filter_type: typedFilterType,
-              operator: (firstOperator?.id || "is") as FilterConfig["operator"],
+              operator: (firstOperator?.id || "is") as UIFilterConfig["operator"],
               third_operator: defaultThirdOperator,
               value: {},
             });
@@ -438,7 +438,7 @@ export const FilterRow: React.FC<FilterRowProps> = ({ filter, onUpdate, onRemove
 
       <CustomDropdown
         value={filter.operator}
-        onChange={(operator) => onUpdate({ ...filter, operator: operator as FilterConfig["operator"] })}
+        onChange={(operator) => onUpdate({ ...filter, operator: operator as UIFilterConfig["operator"] })}
         options={operatorOptions}
         autoWidth
       />

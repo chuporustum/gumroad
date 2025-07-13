@@ -20,5 +20,27 @@
     }
   },
   "required": ["operator"],
-  "additionalProperties": false
+  "additionalProperties": false,
+  "if": {
+    "properties": {
+      "operator": {
+        "enum": ["is_more_than", "is_less_than"]
+      }
+    }
+  },
+  "then": {
+    "required": ["operator", "amount_cents"]
+  },
+  "else": {
+    "if": {
+      "properties": {
+        "operator": {
+          "const": "is_between"
+        }
+      }
+    },
+    "then": {
+      "required": ["operator", "min_amount_cents", "max_amount_cents"]
+    }
+  }
 }

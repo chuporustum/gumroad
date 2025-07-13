@@ -8,7 +8,7 @@ import {
 export const convertUIFilterToAPI = (
   uiFilter: UIFilterConfig,
 ): { filter_type: FilterType; config: APIFilterConfig } => {
-  const { amount, min_amount, max_amount, days, ...otherValues } = uiFilter.value;
+  const { amount, min_amount, max_amount, days, product_ids, ...otherValues } = uiFilter.value;
 
   const operatorMap: Record<string, string> = {
     is_more_than: "is_more_than",
@@ -31,14 +31,17 @@ export const convertUIFilterToAPI = (
 
   const config: APIFilterConfig = {
     ...otherValues,
-    ...(amount && { amount: parseFloat(amount) }),
+    ...(amount && { amount_cents: Math.round(parseFloat(amount) * 100) }),
     ...(min_amount && { min_amount_cents: Math.round(parseFloat(min_amount) * 100) }),
     ...(max_amount && { max_amount_cents: Math.round(parseFloat(max_amount) * 100) }),
     ...(days && { days: parseInt(days, 10) }),
+    ...(product_ids && Array.isArray(product_ids) && { 
+      product_ids: product_ids.map(id => parseInt(id, 10)).filter(id => !isNaN(id))
+    }),
   };
 
   if (apiOperator && apiOperator !== "undefined") {
-    config.operator = apiOperator;
+    (config as any).operator = apiOperator;
   }
 
   return {
@@ -51,7 +54,7 @@ export const convertAPIFilterToUI = (
   apiFilter: { filter_type: FilterType; config: APIFilterConfig },
   filterIndex: number,
 ): UIFilterConfig => {
-  const { operator, amount, amount_cents, min_amount_cents, max_amount_cents, days, ...rest } = apiFilter.config;
+  const { operator, amount, amount_cents, min_amount_cents, max_amount_cents, days, product_ids, ...rest } = apiFilter.config;
 
   const reverseOperatorMap: Record<string, string> = {
     is_more_than: "is_more_than",
@@ -92,6 +95,9 @@ export const convertAPIFilterToUI = (
       ...(min_amount_cents && { min_amount: (min_amount_cents / 100).toString() }),
       ...(max_amount_cents && { max_amount: (max_amount_cents / 100).toString() }),
       ...(days && { days: days.toString() }),
+      ...(product_ids && Array.isArray(product_ids) && { 
+        product_ids: product_ids.map(id => id.toString())
+      }),
     },
     connector: filterIndex === 0 ? null : "and",
   };

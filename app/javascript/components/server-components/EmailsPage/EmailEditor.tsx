@@ -23,7 +23,7 @@ export const EmailEditor = () => {
   const [comment, setComment] = React.useState("");
   const [isPosting, setIsPosting] = React.useState(false);
 
-  const save = asyncVoid(async (publish = false) => {
+  const save = asyncVoid(async (publish: boolean = false) => {
     if (!installment?.external_id) return;
 
     setIsSaving(true);
@@ -32,7 +32,30 @@ export const EmailEditor = () => {
         installment: {
           name,
           message,
+          preheader: "",
+          internal_tag: "",
+          files: [],
+          link_id: null,
+          paid_more_than_cents: null,
+          paid_less_than_cents: null,
+          bought_from: null,
+          installment_type: "email",
+          created_after: "",
+          created_before: "",
+          bought_products: null,
+          bought_variants: null,
+          not_bought_products: null,
+          not_bought_variants: null,
+          affiliate_products: null,
+          send_emails: true,
+          shown_on_profile: false,
+          allow_comments: false,
+          shown_in_profile_sections: [],
+          segment_ids: [],
         },
+        variant_external_id: null,
+        send_preview_email: false,
+        to_be_published_at: null,
         publish,
       };
 
