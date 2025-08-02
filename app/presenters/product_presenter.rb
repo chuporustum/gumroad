@@ -195,6 +195,7 @@ class ProductPresenter
         public_files: product.alive_public_files.attached.map { PublicFilePresenter.new(public_file: _1).props },
         audio_previews_enabled: Feature.active?(:audio_previews, product.user),
         community_chat_enabled: Feature.active?(:communities, product.user) ? product.community_chat_enabled? : nil,
+        tax_inclusive: product.tax_inclusive,
       },
       id: product.external_id,
       unique_permalink: product.unique_permalink,

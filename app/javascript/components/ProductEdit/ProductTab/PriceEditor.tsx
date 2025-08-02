@@ -21,6 +21,8 @@ export const PriceEditor = ({
   onAllowInstallmentPlanChange,
   onNumberOfInstallmentsChange,
   currencyCodeSelector,
+  taxInclusive,
+  setTaxInclusive,
 }: {
   priceCents: number;
   suggestedPriceCents: number | null;
@@ -35,6 +37,8 @@ export const PriceEditor = ({
   onAllowInstallmentPlanChange: (allowed: boolean) => void;
   onNumberOfInstallmentsChange: (numberOfInstallments: number) => void;
   currencyCodeSelector?: { options: CurrencyCode[]; onChange: (currencyCode: CurrencyCode) => void };
+  taxInclusive?: boolean;
+  setTaxInclusive?: (taxInclusive: boolean) => void;
 }) => {
   const uid = React.useId();
 
@@ -93,6 +97,18 @@ export const PriceEditor = ({
           onNumberOfInstallmentsChange={onNumberOfInstallmentsChange}
         />
       ) : null}
+      {setTaxInclusive !== undefined && (
+        <div className="toggle" style={{ marginTop: "var(--spacer-6)" }}>
+          <Toggle value={taxInclusive ?? true} onChange={setTaxInclusive}>
+            <a data-helper-prompt="What is tax-inclusive pricing and how does it work?">
+              Tax-inclusive pricing
+            </a>
+          </Toggle>
+          <p className="field-hint">
+            When enabled, the price you set includes all applicable taxes. This is standard in most countries outside the US.
+          </p>
+        </div>
+      )}
     </fieldset>
   );
 };
