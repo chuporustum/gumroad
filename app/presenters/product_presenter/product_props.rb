@@ -40,6 +40,7 @@ class ProductPresenter::ProductProps
         price_cents: product.price_cents,
         rental_price_cents: product.rental_price_cents,
         pwyw: product.customizable_price ? { suggested_price_cents: product.suggested_price_cents } : nil,
+        tax_inclusive: product.tax_inclusive,
         **ProductPresenter::InstallmentPlanProps.new(product:).props,
         is_legacy_subscription: product.is_legacy_subscription?,
         is_tiered_membership: product.is_tiered_membership,

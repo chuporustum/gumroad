@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2025_04_25_212934) do
+ActiveRecord::Schema[7.1].define(version: 2025_08_01_093136) do
   create_table "active_storage_attachments", charset: "utf8mb4", collation: "utf8mb4_unicode_ci", force: :cascade do |t|
     t.string "name", limit: 191, null: false
     t.string "record_type", limit: 191, null: false
@@ -1110,10 +1110,12 @@ ActiveRecord::Schema[7.1].define(version: 2025_04_25_212934) do
     t.bigint "taxonomy_id"
     t.string "native_type", default: "digital", null: false
     t.integer "discover_fee_per_thousand", default: 100, null: false
+    t.boolean "tax_inclusive", default: true, null: false
     t.index ["banned_at"], name: "index_links_on_banned_at"
     t.index ["custom_permalink"], name: "index_links_on_custom_permalink", length: 191
     t.index ["deleted_at"], name: "index_links_on_deleted_at"
     t.index ["showcaseable"], name: "index_links_on_showcaseable"
+    t.index ["tax_inclusive"], name: "index_links_on_tax_inclusive"
     t.index ["taxonomy_id"], name: "index_links_on_taxonomy_id"
     t.index ["unique_permalink"], name: "index_links_on_unique_permalink", length: 191
     t.index ["user_id", "updated_at"], name: "index_links_on_user_id_and_updated_at"
