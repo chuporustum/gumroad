@@ -62,11 +62,12 @@ export const Card = ({
   const { product, purchase } = result;
 
   const toggleArchived = asyncVoid(async () => {
-    const data = { purchase_id: result.purchase.id, is_archived: !result.purchase.is_archived };
+    const isArchiving = !result.purchase.is_archived;
+    const data = { purchase_id: result.purchase.id, is_archived: isArchiving };
     try {
       await setPurchaseArchived(data);
       onArchive();
-      showAlert(result.purchase.is_archived ? "Product unarchived!" : "Product archived!", "success");
+      showAlert(isArchiving ? "Product archived!" : "Product unarchived!", "success");
     } catch (e) {
       assertResponseError(e);
       showAlert("Something went wrong.", "error");
@@ -263,8 +264,9 @@ const LibraryPage = ({ results, creators, bundles, reviews_page_enabled, followi
   const isDesktop = useIsAboveBreakpoint("lg");
   const [mobileFiltersExpanded, setMobileFiltersExpanded] = React.useState(false);
   const [showingAllCreators, setShowingAllCreators] = React.useState(false);
-  const hasArchivedProducts = results.some((result) => result.purchase.is_archived);
-  const showArchivedNotice = !state.search.showArchivedOnly && !results.some((result) => !result.purchase.is_archived);
+  const hasArchivedProducts = state.results.some((result) => result.purchase.is_archived);
+  const archivedCount = state.results.filter((result) => result.purchase.is_archived).length;
+  const showArchivedNotice = !state.search.showArchivedOnly && !state.results.some((result) => !result.purchase.is_archived);
   const hasParams =
     state.search.showArchivedOnly || state.search.query || state.search.creators.length || state.search.bundles.length;
   const [deleting, setDeleting] = React.useState<Result | null>(null);
@@ -315,12 +317,12 @@ const LibraryPage = ({ results, creators, bundles, reviews_page_enabled, followi
       followingWishlistsEnabled={following_wishlists_enabled}
     >
       <section className="products-section__container">
-        {results.length === 0 || showArchivedNotice ? (
+        {state.results.length === 0 || showArchivedNotice ? (
           <div className="placeholder">
             <figure>
               <img src={placeholder} />
             </figure>
-            {results.length === 0 ? (
+            {state.results.length === 0 ? (
               <>
                 <h2 className="library-header">You haven't bought anything... yet!</h2>
                 Once you do, it'll show up here so you can download, watch, read, or listen to all your purchases.
@@ -344,8 +346,22 @@ const LibraryPage = ({ results, creators, bundles, reviews_page_enabled, followi
             )}
           </div>
         ) : null}
+        {archivedCount > 0 && !state.search.showArchivedOnly && !showArchivedNotice ? (
+          <div className="mb-5 p-3 bg-gray-100 border border-gray-300 rounded text-center">
+            You have {archivedCount} archived purchase{archivedCount === 1 ? "" : "s"}-{" "}
+            <button
+              className="link"
+              onClick={(e) => {
+                e.preventDefault();
+                dispatch({ type: "update-search", search: { showArchivedOnly: true } });
+              }}
+            >
+              click here to view
+            </button>
+          </div>
+        ) : null}
         <div className="with-sidebar">
-          {!showArchivedNotice && (hasParams || hasArchivedProducts || results.length > 9) ? (
+          {!showArchivedNotice && (hasParams || hasArchivedProducts || state.results.length > 9) ? (
             <div className="stack">
               <header>
                 <div>
