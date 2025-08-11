@@ -186,12 +186,12 @@ const FormPage = ({
                           .filter((product) => !product.archived)
                           .map((product) => ({ id: product.id, label: product.name }))}
                         value={products
-                          .filter((product) => field.global || field.products.includes(product.id))
+                          .filter((product) => !product.archived && (field.global || field.products.includes(product.id)))
                           .map((product) => ({ id: product.id, label: product.name }))}
                         aria-invalid={errors.get(field.key)?.has("products") ?? false}
                         isMulti
                         isClearable
-                        onChange={(items) => updateCustomField(i, { global: false, products: items.map(({ id }) => id) })}
+                        onChange={(items) => updateCustomField(i, { global: false, products: (items ?? []).map(({ id }) => id) })}
                       />
                       <label>
                         <input
@@ -201,7 +201,7 @@ const FormPage = ({
                             updateCustomField(
                               i,
                               e.target.checked
-                                ? { global: true, products: products.map(({ id }) => id) }
+                                ? { global: true, products: products.filter((p) => !p.archived).map(({ id }) => id) }
                                 : { global: false },
                             )
                           }
