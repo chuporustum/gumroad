@@ -211,7 +211,7 @@ describe("Library Scenario", type: :feature, js: true) do
     expect(page).to have_css(".product-card", count: 1, wait: 5)
 
     # Banner should show with count of 2 archived purchases
-    expect(page).to have_text("You have 2 archived purchases- click here to view")
+    expect(page).to have_text("You have 2 archived purchases. Click here to view")
 
     # Should show active purchase but not archived ones
     expect(page).to have_product_card(active_purchase.link)
@@ -228,7 +228,7 @@ describe("Library Scenario", type: :feature, js: true) do
     expect(page).to_not have_product_card(active_purchase.link)
 
     # Banner should not appear when viewing archived purchases
-    expect(page).to_not have_text("You have 2 archived purchases- click here to view")
+    expect(page).to_not have_text("You have 2 archived purchases. Click here to view")
   end
 
   it "does not show banner when user has no archived purchases" do
@@ -237,7 +237,7 @@ describe("Library Scenario", type: :feature, js: true) do
 
     visit "/library"
 
-    expect(page).to_not have_text("archived purchases- click here to view")
+    expect(page).to_not have_text("archived purchases. Click here to view")
   end
 
   it "does not show banner when all purchases are archived" do
@@ -255,7 +255,7 @@ describe("Library Scenario", type: :feature, js: true) do
     expect(page).to have_button("See archive")
     
     # Should NOT show the banner (to prevent duplicate UI)
-    expect(page).to_not have_text("You have 2 archived purchases- click here to view")
+    expect(page).to_not have_text("You have 2 archived purchases. Click here to view")
   end
 
   it "shows singular form for single archived purchase" do
@@ -268,7 +268,7 @@ describe("Library Scenario", type: :feature, js: true) do
     visit "/library"
 
     # Should show singular form
-    expect(page).to have_text("You have 1 archived purchase- click here to view")
+    expect(page).to have_text("You have 1 archived purchase. Click here to view")
   end
 
   it "updates banner count dynamically when archiving purchases" do
@@ -287,7 +287,7 @@ describe("Library Scenario", type: :feature, js: true) do
     visit "/library"
 
     # Initially shows 1 archived purchase
-    expect(page).to have_text("You have 1 archived purchase- click here to view")
+    expect(page).to have_text("You have 1 archived purchase. Click here to view")
 
     # Archive another purchase
     within find_product_card(purchase1.link) do
@@ -296,7 +296,7 @@ describe("Library Scenario", type: :feature, js: true) do
     end
 
     # Banner should update to show 2 archived purchases
-    expect(page).to have_text("You have 2 archived purchases- click here to view")
+    expect(page).to have_text("You have 2 archived purchases. Click here to view")
 
     # Archive the last active purchase
     within find_product_card(purchase2.link) do
@@ -306,7 +306,7 @@ describe("Library Scenario", type: :feature, js: true) do
 
     # Should switch to "all archived" view
     expect(page).to have_text("You've archived all your products.")
-    expect(page).to_not have_text("You have 3 archived purchases- click here to view")
+    expect(page).to_not have_text("You have 3 archived purchases. Click here to view")
   end
 
   it "lists the same product several times if purchased several times" do
