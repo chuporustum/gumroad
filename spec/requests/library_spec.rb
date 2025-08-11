@@ -219,7 +219,7 @@ describe("Library Scenario", type: :feature, js: true) do
     expect(page).to_not have_product_card(archived_purchase2.link)
 
     # Clicking banner should toggle to archived view
-    click_on "click here to view"
+    click_on "Click here to view"
     expect(page.current_url).to include("show_archived_only=true")
 
     # Should now show archived purchases but not active one
