@@ -62,12 +62,11 @@ export const Card = ({
   const { product, purchase } = result;
 
   const toggleArchived = asyncVoid(async () => {
-    const isArchiving = !result.purchase.is_archived;
-    const data = { purchase_id: result.purchase.id, is_archived: isArchiving };
+    const data = { purchase_id: result.purchase.id, is_archived: !result.purchase.is_archived };
     try {
       await setPurchaseArchived(data);
       onArchive();
-      showAlert(isArchiving ? "Product archived!" : "Product unarchived!", "success");
+      showAlert(result.purchase.is_archived ? "Product unarchived!" : "Product archived!", "success");
     } catch (e) {
       assertResponseError(e);
       showAlert("Something went wrong.", "error");
@@ -264,7 +263,6 @@ const LibraryPage = ({ results, creators, bundles, reviews_page_enabled, followi
   const isDesktop = useIsAboveBreakpoint("lg");
   const [mobileFiltersExpanded, setMobileFiltersExpanded] = React.useState(false);
   const [showingAllCreators, setShowingAllCreators] = React.useState(false);
-  const hasArchivedProducts = state.results.some((result) => result.purchase.is_archived);
   const archivedCount = state.results.filter((result) => result.purchase.is_archived).length;
   const showArchivedNotice = !state.search.showArchivedOnly && !state.results.some((result) => !result.purchase.is_archived);
   const hasParams =
@@ -361,7 +359,7 @@ const LibraryPage = ({ results, creators, bundles, reviews_page_enabled, followi
           </div>
         ) : null}
         <div className="with-sidebar">
-          {!showArchivedNotice && (hasParams || hasArchivedProducts || state.results.length > 9) ? (
+          {!showArchivedNotice && (hasParams || archivedCount > 0 || state.results.length > 9) ? (
             <div className="stack">
               <header>
                 <div>
@@ -476,7 +474,7 @@ const LibraryPage = ({ results, creators, bundles, reviews_page_enabled, followi
                       </div>
                     </fieldset>
                   </div>
-                  {hasArchivedProducts ? (
+                  {archivedCount > 0 ? (
                     <div className="archived">
                       <fieldset role="group">
                         <label className="filter-archived">
