@@ -162,8 +162,7 @@ describe("Library Scenario", type: :feature, js: true) do
   end
 
   it "allows unarchiving purchases" do
-    purchase = create(:purchase, purchaser: @user)
-    purchase.update_column(:flags, purchase.flags | (2**16))
+    purchase = create(:purchase, purchaser: @user, is_archived: true)
     Link.import(refresh: true, force: true)
 
     visit "/library?show_archived_only=true"
@@ -186,8 +185,7 @@ describe("Library Scenario", type: :feature, js: true) do
     
     purchase1 = create(:purchase, purchaser: @user, link: product1)
     purchase2 = create(:purchase, purchaser: @user, link: product2)
-    purchase3 = create(:purchase, purchaser: @user, link: product3)
-    purchase3.update_column(:flags, purchase3.flags | (2**16))
+    purchase3 = create(:purchase, purchaser: @user, link: product3, is_archived: true)
     Link.import(refresh: true, force: true)
 
     visit "/library"
