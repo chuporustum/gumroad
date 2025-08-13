@@ -193,14 +193,14 @@ describe("Library Scenario", type: :feature, js: true) do
     expect(page).to have_product_card(purchase1.link)
     expect(page).to have_product_card(purchase2.link)
     expect(page).to_not have_product_card(purchase3.link)
-    expect(page).to have_alert("You have 1 archived purchase. Click here to view")
+    expect(page).to have_text("You have 1 archived purchase. Click here to view")
 
     within find_product_card(purchase1.link) do
       find('[aria-label="Open product action menu"]').click
       find('div[role="menuitem"]', text: 'Archive').click
     end
 
-    expect(page).to have_alert("You have 2 archived purchases. Click here to view")
+    expect(page).to have_text("You have 2 archived purchases. Click here to view")
 
     click_on "Click here to view"
     expect(page.current_url).to include("show_archived_only=true")
@@ -209,7 +209,7 @@ describe("Library Scenario", type: :feature, js: true) do
     expect(page).to have_product_card(purchase1.link)
     expect(page).to have_product_card(purchase3.link)
     expect(page).to_not have_product_card(purchase2.link)
-    expect(page).to_not have_alert("You have 2 archived purchases. Click here to view")
+    expect(page).to_not have_text("You have 2 archived purchases. Click here to view")
 
     within find_product_card(purchase1.link) do
       find('[aria-label="Open product action menu"]').click
@@ -223,7 +223,7 @@ describe("Library Scenario", type: :feature, js: true) do
     visit "/library"
     expect(page).to have_product_card(purchase1.link)
     expect(page).to have_product_card(purchase2.link)
-    expect(page).to have_alert("You have 1 archived purchase. Click here to view")
+    expect(page).to have_text("You have 1 archived purchase. Click here to view")
 
     within find_product_card(purchase2.link) do
       find('[aria-label="Open product action menu"]').click
@@ -237,7 +237,7 @@ describe("Library Scenario", type: :feature, js: true) do
 
     expect(page).to have_text("You've archived all your products.")
     expect(page).to have_button("See archive")
-    expect(page).to_not have_alert("You have 3 archived purchases. Click here to view")
+    expect(page).to_not have_text("You have 3 archived purchases. Click here to view")
 
     click_on "See archive"
     
@@ -249,7 +249,7 @@ describe("Library Scenario", type: :feature, js: true) do
     expect(page).to have_current_path("/library?show_archived_only=true&sort=recently_updated")
     
     visit "/library"
-    expect(page).to have_alert("You have 2 archived purchases. Click here to view")
+    expect(page).to have_text("You have 2 archived purchases. Click here to view")
     expect(page).to have_product_card(purchase3.link)
   end
 

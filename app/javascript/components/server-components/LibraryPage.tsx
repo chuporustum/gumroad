@@ -264,7 +264,8 @@ const LibraryPage = ({ results, creators, bundles, reviews_page_enabled, followi
   const [mobileFiltersExpanded, setMobileFiltersExpanded] = React.useState(false);
   const [showingAllCreators, setShowingAllCreators] = React.useState(false);
   const archivedCount = state.results.filter((result) => result.purchase.is_archived).length;
-  const showArchivedNotice = !state.search.showArchivedOnly && !state.results.some((result) => !result.purchase.is_archived);
+  const showArchivedNotice =
+    !state.search.showArchivedOnly && !state.results.some((result) => !result.purchase.is_archived);
   const hasParams =
     state.search.showArchivedOnly || state.search.query || state.search.creators.length || state.search.bundles.length;
   const [deleting, setDeleting] = React.useState<Result | null>(null);
@@ -345,17 +346,19 @@ const LibraryPage = ({ results, creators, bundles, reviews_page_enabled, followi
           </div>
         ) : null}
         {archivedCount > 0 && !state.search.showArchivedOnly && !showArchivedNotice ? (
-          <div role="alert" className="info mb-5 text-center">
-            You have {archivedCount} archived purchase{archivedCount === 1 ? "" : "s"}.{" "}
-            <button
-              type="button"
-              className="link"
-              onClick={() => {
-                dispatch({ type: "update-search", search: { showArchivedOnly: true } });
-              }}
-            >
-              Click here to view
-            </button>
+          <div className="bg-gray-100 border-gray-300 mb-5 rounded border p-3 text-center">
+            <span>
+              You have {archivedCount} archived purchase{archivedCount === 1 ? "" : "s"}.{" "}
+              <button
+                type="button"
+                className="link"
+                onClick={() => {
+                  dispatch({ type: "update-search", search: { showArchivedOnly: true } });
+                }}
+              >
+                Click here to view
+              </button>
+            </span>
           </div>
         ) : null}
         <div className="with-sidebar">
