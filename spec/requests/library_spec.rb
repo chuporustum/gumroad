@@ -237,6 +237,7 @@ describe("Library Scenario", type: :feature, js: true) do
       click_on "Archive"
     end
 
+    find_product_card(purchase1.link).hover
     within find_product_card(purchase1.link) do
       find('[aria-label="Open product action menu"]').click
       click_on "Archive"
