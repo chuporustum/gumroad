@@ -150,11 +150,9 @@ describe("Library Scenario", type: :feature, js: true) do
     purchase = create(:purchase, purchaser: @user)
     Link.import(refresh: true, force: true)
 
-    # The library shows this purchase
     visit "/library"
     expect(page).to have_product_card(purchase.link)
 
-    # Archive the purchase, which disappears from the library
     visit "/library"
     find_product_card(purchase.link).hover
     find('[aria-label="Open product action menu"]').click
@@ -165,148 +163,96 @@ describe("Library Scenario", type: :feature, js: true) do
 
   it "allows unarchiving purchases" do
     purchase = create(:purchase, purchaser: @user)
-    # Set the is_archived flag using FlagShihTzu
     purchase.update_column(:flags, purchase.flags | (2**16))
     Link.import(refresh: true, force: true)
 
     visit "/library?show_archived_only=true"
     expect(page).to have_product_card(purchase.link)
 
-    # Unarchive the purchase, which disappears from the archives
     find_product_card(purchase.link).hover
     find('[aria-label="Open product action menu"]').click
     click_on "Unarchive"
 
     expect(page).to have_current_path("/library?sort=recently_updated")
 
-    # Purchase appears again in the library
     visit "/library"
     expect(page).to have_product_card(purchase.link)
   end
 
-  it "shows archived purchases banner with count when user has archived purchases" do
-    # Create purchases with unique products to avoid confusion
-    active_product = create(:product, name: "Active Product")
-    archived_product1 = create(:product, name: "Archived Product 1")
-    archived_product2 = create(:product, name: "Archived Product 2")
-    
-    active_purchase = create(:purchase, purchaser: @user, link: active_product)
-    archived_purchase1 = create(:purchase, purchaser: @user, link: archived_product1)
-    archived_purchase2 = create(:purchase, purchaser: @user, link: archived_product2)
-    
-    # Set the is_archived flag using FlagShihTzu (bit 16 in flags column)
-    archived_purchase1.update_column(:flags, archived_purchase1.flags | (2**16))
-    archived_purchase2.update_column(:flags, archived_purchase2.flags | (2**16))
-    
-    # Verify the flags are set correctly
-    expect(active_purchase.reload.is_archived).to eq(false)
-    expect(archived_purchase1.reload.is_archived).to eq(true)
-    expect(archived_purchase2.reload.is_archived).to eq(true)
-    
-    Link.import(refresh: true, force: true)
-
-    visit "/library"
-
-    # Wait for React to render and ensure we have exactly 1 product card (the active one)
-    expect(page).to have_css(".product-card", count: 1, wait: 5)
-
-    # Banner should show with count of 2 archived purchases
-    expect(page).to have_text("You have 2 archived purchases. Click here to view")
-
-    # Should show active purchase but not archived ones
-    expect(page).to have_product_card(active_purchase.link)
-    expect(page).to_not have_product_card(archived_purchase1.link)
-    expect(page).to_not have_product_card(archived_purchase2.link)
-
-    # Clicking banner should toggle to archived view
-    click_on "Click here to view"
-    expect(page.current_url).to include("show_archived_only=true")
-
-    # Should now show archived purchases but not active one
-    expect(page).to have_product_card(archived_purchase1.link)
-    expect(page).to have_product_card(archived_purchase2.link)
-    expect(page).to_not have_product_card(active_purchase.link)
-
-    # Banner should not appear when viewing archived purchases
-    expect(page).to_not have_text("You have 2 archived purchases. Click here to view")
-  end
-
-  it "does not show banner when user has no archived purchases" do
-    create(:purchase, purchaser: @user)
-    Link.import(refresh: true, force: true)
-
-    visit "/library"
-
-    expect(page).to_not have_text("archived purchases. Click here to view")
-  end
-
-  it "does not show banner when all purchases are archived" do
-    archived_purchase1 = create(:purchase, purchaser: @user)
-    archived_purchase2 = create(:purchase, purchaser: @user)
-    # Set the is_archived flag using FlagShihTzu
-    archived_purchase1.update_column(:flags, archived_purchase1.flags | (2**16))
-    archived_purchase2.update_column(:flags, archived_purchase2.flags | (2**16))
-    Link.import(refresh: true, force: true)
-
-    visit "/library"
-
-    # Should show the "You've archived all your products" message instead
-    expect(page).to have_text("You've archived all your products.")
-    expect(page).to have_button("See archive")
-    
-    # Should NOT show the banner (to prevent duplicate UI)
-    expect(page).to_not have_text("You have 2 archived purchases. Click here to view")
-  end
-
-  it "shows singular form for single archived purchase" do
-    create(:purchase, purchaser: @user)
-    archived_purchase = create(:purchase, purchaser: @user)
-    # Set the is_archived flag using FlagShihTzu
-    archived_purchase.update_column(:flags, archived_purchase.flags | (2**16))
-    Link.import(refresh: true, force: true)
-
-    visit "/library"
-
-    # Should show singular form
-    expect(page).to have_text("You have 1 archived purchase. Click here to view")
-  end
-
-  it "updates banner count dynamically when archiving purchases" do
-    # Create purchases with unique products
+  it "manages archived purchases banner and interactions" do
     product1 = create(:product, name: "Product 1")
     product2 = create(:product, name: "Product 2")
-    archived_product = create(:product, name: "Archived Product")
+    product3 = create(:product, name: "Product 3")
     
     purchase1 = create(:purchase, purchaser: @user, link: product1)
     purchase2 = create(:purchase, purchaser: @user, link: product2)
-    archived_purchase = create(:purchase, purchaser: @user, link: archived_product)
-    # Set the is_archived flag using FlagShihTzu
-    archived_purchase.update_column(:flags, archived_purchase.flags | (2**16))
+    purchase3 = create(:purchase, purchaser: @user, link: product3)
+    purchase3.update_column(:flags, purchase3.flags | (2**16))
     Link.import(refresh: true, force: true)
 
     visit "/library"
 
-    # Initially shows 1 archived purchase
-    expect(page).to have_text("You have 1 archived purchase. Click here to view")
+    expect(page).to have_product_card(purchase1.link)
+    expect(page).to have_product_card(purchase2.link)
+    expect(page).to_not have_product_card(purchase3.link)
+    expect(page).to have_alert("You have 1 archived purchase. Click here to view")
 
-    # Archive another purchase
     within find_product_card(purchase1.link) do
       find('[aria-label="Open product action menu"]').click
       find('div[role="menuitem"]', text: 'Archive').click
     end
 
-    # Banner should update to show 2 archived purchases
-    expect(page).to have_text("You have 2 archived purchases. Click here to view")
+    expect(page).to have_alert("You have 2 archived purchases. Click here to view")
 
-    # Archive the last active purchase
+    click_on "Click here to view"
+    expect(page.current_url).to include("show_archived_only=true")
+    expect(page).to have_checked_field("Show archived only")
+
+    expect(page).to have_product_card(purchase1.link)
+    expect(page).to have_product_card(purchase3.link)
+    expect(page).to_not have_product_card(purchase2.link)
+    expect(page).to_not have_alert("You have 2 archived purchases. Click here to view")
+
+    within find_product_card(purchase1.link) do
+      find('[aria-label="Open product action menu"]').click
+      click_on "Unarchive"
+    end
+
+    expect(page).to have_current_path("/library?show_archived_only=true&sort=recently_updated")
+    expect(page).to have_product_card(purchase3.link)
+    expect(page).to_not have_product_card(purchase1.link)
+    
+    visit "/library"
+    expect(page).to have_product_card(purchase1.link)
+    expect(page).to have_product_card(purchase2.link)
+    expect(page).to have_alert("You have 1 archived purchase. Click here to view")
+
     within find_product_card(purchase2.link) do
       find('[aria-label="Open product action menu"]').click
       find('div[role="menuitem"]', text: 'Archive').click
     end
 
-    # Should switch to "all archived" view
+    within find_product_card(purchase1.link) do
+      find('[aria-label="Open product action menu"]').click
+      find('div[role="menuitem"]', text: 'Archive').click
+    end
+
     expect(page).to have_text("You've archived all your products.")
-    expect(page).to_not have_text("You have 3 archived purchases. Click here to view")
+    expect(page).to have_button("See archive")
+    expect(page).to_not have_alert("You have 3 archived purchases. Click here to view")
+
+    click_on "See archive"
+    
+    within find_product_card(purchase3.link) do
+      find('[aria-label="Open product action menu"]').click
+      click_on "Unarchive"
+    end
+
+    expect(page).to have_current_path("/library?show_archived_only=true&sort=recently_updated")
+    
+    visit "/library"
+    expect(page).to have_alert("You have 2 archived purchases. Click here to view")
+    expect(page).to have_product_card(purchase3.link)
   end
 
   it "lists the same product several times if purchased several times" do

@@ -345,7 +345,7 @@ const LibraryPage = ({ results, creators, bundles, reviews_page_enabled, followi
           </div>
         ) : null}
         {archivedCount > 0 && !state.search.showArchivedOnly && !showArchivedNotice ? (
-          <div className="mb-5 p-3 bg-gray-100 border border-gray-300 rounded text-center">
+          <div role="alert" className="info mb-5 text-center">
             You have {archivedCount} archived purchase{archivedCount === 1 ? "" : "s"}.{" "}
             <button
               type="button"
