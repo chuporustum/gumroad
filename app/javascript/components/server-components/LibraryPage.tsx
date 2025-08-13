@@ -346,19 +346,17 @@ const LibraryPage = ({ results, creators, bundles, reviews_page_enabled, followi
           </div>
         ) : null}
         {archivedCount > 0 && !state.search.showArchivedOnly && !showArchivedNotice ? (
-          <div className="bg-gray-100 border-gray-300 mb-5 rounded border p-3 text-center">
-            <span>
-              You have {archivedCount} archived purchase{archivedCount === 1 ? "" : "s"}.{" "}
-              <button
-                type="button"
-                className="link"
-                onClick={() => {
-                  dispatch({ type: "update-search", search: { showArchivedOnly: true } });
-                }}
-              >
-                Click here to view
-              </button>
-            </span>
+          <div role="status" className="info mb-5">
+            You have {archivedCount} archived purchase{archivedCount === 1 ? "" : "s"}.{" "}
+            <button
+              type="button"
+              className="link"
+              onClick={() => {
+                dispatch({ type: "update-search", search: { showArchivedOnly: true } });
+              }}
+            >
+              Click here to view
+            </button>
           </div>
         ) : null}
         <div className="with-sidebar">
