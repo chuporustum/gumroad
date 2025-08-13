@@ -150,12 +150,14 @@ describe("Library Scenario", type: :feature, js: true) do
     purchase = create(:purchase, purchaser: @user)
     Link.import(refresh: true, force: true)
 
+    # The library shows this purchase
     visit "/library"
     expect(page).to have_product_card(purchase.link)
 
+    # Archive the purchase, which disappears from the library
     visit "/library"
     find_product_card(purchase.link).hover
-    find_and_click('[aria-label="Open product action menu"]')
+    find('[aria-label="Open product action menu"]').click
     click_on "Archive"
 
     expect(page).to_not have_product_card(purchase.link)
@@ -168,12 +170,14 @@ describe("Library Scenario", type: :feature, js: true) do
     visit "/library?show_archived_only=true"
     expect(page).to have_product_card(purchase.link)
 
+    # Unarchive the purchase, which disappears from the archives
     find_product_card(purchase.link).hover
-    find_and_click('[aria-label="Open product action menu"]')
+    find('[aria-label="Open product action menu"]').click
     click_on "Unarchive"
 
     expect(page).to have_current_path("/library?sort=recently_updated")
 
+    # Purchase appears again in the library
     visit "/library"
     expect(page).to have_product_card(purchase.link)
   end
@@ -182,7 +186,7 @@ describe("Library Scenario", type: :feature, js: true) do
     product1 = create(:product, name: "Product 1")
     product2 = create(:product, name: "Product 2")
     product3 = create(:product, name: "Product 3")
-    
+
     purchase1 = create(:purchase, purchaser: @user, link: product1)
     purchase2 = create(:purchase, purchaser: @user, link: product2)
     purchase3 = create(:purchase, purchaser: @user, link: product3, is_archived: true)
@@ -197,7 +201,7 @@ describe("Library Scenario", type: :feature, js: true) do
     expect(page).to have_text("Click here to view")
 
     within find_product_card(purchase1.link) do
-      find_and_click('[aria-label="Open product action menu"]')
+      find('[aria-label="Open product action menu"]').click
       click_on "Archive"
     end
 
@@ -214,14 +218,14 @@ describe("Library Scenario", type: :feature, js: true) do
     expect(page).to_not have_text("You have 2 archived purchases")
 
     within find_product_card(purchase1.link) do
-      find_and_click('[aria-label="Open product action menu"]')
+      find('[aria-label="Open product action menu"]').click
       click_on "Unarchive"
     end
 
     expect(page).to have_current_path("/library?show_archived_only=true&sort=recently_updated")
     expect(page).to have_product_card(purchase3.link)
     expect(page).to_not have_product_card(purchase1.link)
-    
+
     visit "/library"
     expect(page).to have_product_card(purchase1.link)
     expect(page).to have_product_card(purchase2.link)
@@ -229,12 +233,12 @@ describe("Library Scenario", type: :feature, js: true) do
     expect(page).to have_text("Click here to view")
 
     within find_product_card(purchase2.link) do
-      find_and_click('[aria-label="Open product action menu"]')
+      find('[aria-label="Open product action menu"]').click
       click_on "Archive"
     end
 
     within find_product_card(purchase1.link) do
-      find_and_click('[aria-label="Open product action menu"]')
+      find('[aria-label="Open product action menu"]').click
       click_on "Archive"
     end
 
@@ -242,18 +246,19 @@ describe("Library Scenario", type: :feature, js: true) do
     expect(page).to_not have_text("You have 3 archived purchases")
 
     click_on "See archive"
-    
+
     within find_product_card(purchase3.link) do
-      find_and_click('[aria-label="Open product action menu"]')
+      find('[aria-label="Open product action menu"]').click
       click_on "Unarchive"
     end
 
     expect(page).to have_current_path("/library?show_archived_only=true&sort=recently_updated")
-    
+
     visit "/library"
+    wait_for_ajax
+    expect(page).to have_product_card(purchase3.link)
     expect(page).to have_text("You have 2 archived purchases")
     expect(page).to have_text("Click here to view")
-    expect(page).to have_product_card(purchase3.link)
   end
 
   it "lists the same product several times if purchased several times" do
