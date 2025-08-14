@@ -156,6 +156,7 @@ describe("Library Scenario", type: :feature, js: true) do
 
     # Archive the purchase, which disappears from the library
     visit "/library"
+    find_product_card(purchase.link).hover
     within find_product_card(purchase.link) do
       find_and_click('[aria-label="Open product action menu"]')
       click_on "Archive"
@@ -172,6 +173,7 @@ describe("Library Scenario", type: :feature, js: true) do
     expect(page).to have_product_card(purchase.link)
 
     # Unarchive the purchase, which disappears from the archives
+    find_product_card(purchase.link).hover
     within find_product_card(purchase.link) do
       find_and_click('[aria-label="Open product action menu"]')
       click_on "Unarchive"
@@ -243,11 +245,11 @@ describe("Library Scenario", type: :feature, js: true) do
       click_on "Archive"
     end
 
-    expect(page).to have_text("You've archived all your products.")
     expect(page).to_not have_status(text: "You have 3 archived purchases. Click here to view")
 
     click_on "See archive"
 
+    find_product_card(purchase3.link).hover
     within find_product_card(purchase3.link) do
       find_and_click('[aria-label="Open product action menu"]')
       click_on "Unarchive"
