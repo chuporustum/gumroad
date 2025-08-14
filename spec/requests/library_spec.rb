@@ -156,9 +156,10 @@ describe("Library Scenario", type: :feature, js: true) do
 
     # Archive the purchase, which disappears from the library
     visit "/library"
-    find_product_card(purchase.link).hover
-    find_and_click('[aria-label="Open product action menu"]')
-    click_on "Archive"
+    within find_product_card(purchase.link) do
+      find_and_click('[aria-label="Open product action menu"]')
+      click_on "Archive"
+    end
 
     expect(page).to_not have_product_card(purchase.link)
   end
@@ -171,9 +172,10 @@ describe("Library Scenario", type: :feature, js: true) do
     expect(page).to have_product_card(purchase.link)
 
     # Unarchive the purchase, which disappears from the archives
-    find_product_card(purchase.link).hover
-    find_and_click('[aria-label="Open product action menu"]')
-    click_on "Unarchive"
+    within find_product_card(purchase.link) do
+      find_and_click('[aria-label="Open product action menu"]')
+      click_on "Unarchive"
+    end
 
     expect(page).to have_current_path("/library?sort=recently_updated")
 
