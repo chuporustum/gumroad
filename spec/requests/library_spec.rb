@@ -254,6 +254,7 @@ describe("Library Scenario", type: :feature, js: true) do
       find_and_click('[aria-label="Open product action menu"]')
       click_on "Unarchive"
     end
+    wait_for_ajax
 
     expect(page).to have_current_path("/library?show_archived_only=true&sort=recently_updated")
 
