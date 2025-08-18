@@ -379,6 +379,46 @@ describe LinksController, :vcr do
         end
       end
 
+      context "when user has no identity verification" do
+        before do
+          allow_any_instance_of(User).to receive(:identity_verified?).and_return(false)
+          allow_any_instance_of(User).to receive(:bank_account_verified?).and_return(true)
+        end
+
+        it "returns identity verification error message" do
+          post :publish, params: { id: @disabled_link.unique_permalink }
+
+          expect(response.parsed_body["error_message"]).to eq("You must verify your identity before you can publish products.")
+        end
+
+        it "does not publish the link" do
+          post :publish, params: { id: @disabled_link.unique_permalink }
+
+          expect(response.parsed_body["success"]).to eq(false)
+          expect(@disabled_link.reload.purchase_disabled_at).to be_present
+        end
+      end
+
+      context "when user has no bank account verification" do
+        before do
+          allow_any_instance_of(User).to receive(:identity_verified?).and_return(true)
+          allow_any_instance_of(User).to receive(:bank_account_verified?).and_return(false)
+        end
+
+        it "returns bank account verification error message" do
+          post :publish, params: { id: @disabled_link.unique_permalink }
+
+          expect(response.parsed_body["error_message"]).to eq("You must add and verify a bank account or payment method before you can publish products.")
+        end
+
+        it "does not publish the link" do
+          post :publish, params: { id: @disabled_link.unique_permalink }
+
+          expect(response.parsed_body["success"]).to eq(false)
+          expect(@disabled_link.reload.purchase_disabled_at).to be_present
+        end
+      end
+
       context "when user email is not confirmed" do
         before do
           seller.update!(confirmed_at: nil)

@@ -45,7 +45,16 @@ class User
     end
 
     def can_publish_products?
+      return false unless identity_verified? && bank_account_verified?
       !(check_merchant_account_is_linked && !merchant_accounts.alive.charge_processor_alive.exists?)
+    end
+
+    def identity_verified?
+      alive_user_compliance_info&.has_completed_compliance_info? || false
+    end
+
+    def bank_account_verified?
+      active_bank_account.present? || has_stripe_account_connected? || has_paypal_account_connected?
     end
 
     def pay_with_paypal_enabled?

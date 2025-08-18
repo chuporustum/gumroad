@@ -387,6 +387,7 @@ class Link < ApplicationRecord
   def publish!
     enforce_shipping_destinations_presence!
     enforce_user_email_confirmation!
+    enforce_identity_and_bank_verification!
     enforce_merchant_account_exits_for_new_users!
 
     if auto_transcode_videos?
@@ -1281,6 +1282,18 @@ class Link < ApplicationRecord
 
       errors.add(:base, "The product needs to be shippable to at least one destination.")
       raise LinkInvalid, "The product needs to be shippable to at least one destination."
+    end
+
+    def enforce_identity_and_bank_verification!
+      unless user.identity_verified?
+        errors.add(:base, "You must verify your identity before you can publish products.")
+        raise LinkInvalid, "You must verify your identity before you can publish products."
+      end
+
+      unless user.bank_account_verified?
+        errors.add(:base, "You must add and verify a bank account or payment method before you can publish products.")
+        raise LinkInvalid, "You must add and verify a bank account or payment method before you can publish products."
+      end
     end
 
     def enforce_merchant_account_exits_for_new_users!
