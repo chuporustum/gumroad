@@ -19,6 +19,13 @@ declare module "$vendor/evaporate.cjs" {
       bucket: string;
       fetchCurrentServerTimeUrl: string;
       maxFileSize?: number;
+      partSize?: number;
+      maxRetries?: number;
+      maxRetryBackoffSecs?: number;
+      allowS3ExistenceOptimization?: boolean;
+      computeContentMd5?: boolean;
+      aws4?: boolean;
+      logging?: boolean;
     });
 
     add(params: UploadParams): string | number;

@@ -201,7 +201,7 @@ type FileStatus =
   | { type: "dropbox"; externalId: string; uploadState: string }
   | {
       type: "unsaved";
-      uploadStatus: { type: "uploaded" } | { type: "uploading"; progress: UploadProgress };
+      uploadStatus: { type: "uploaded" } | { type: "uploading"; progress: UploadProgress } | { type: "failed"; error: string };
       url: string;
     };
 

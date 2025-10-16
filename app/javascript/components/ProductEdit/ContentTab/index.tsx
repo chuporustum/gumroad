@@ -192,13 +192,23 @@ const ContentTabContent = ({ selectedVariantId }: { selectedVariantId: string | 
           updateProduct({});
         },
         onProgress: (progress) => {
-          fileStatus.uploadStatus = { type: "uploading", progress };
-          updateProduct({});
+          if (progress.percent >= fileStatus.uploadStatus.type === "uploading" ? fileStatus.uploadStatus.progress.percent : 0) {
+            fileStatus.uploadStatus = { type: "uploading", progress };
+            updateProduct({});
+          }
         },
       });
       if (typeof status === "string") {
-        // status contains error string if any, otherwise index of file in array
-        showAlert(status, "error");
+        let errorMessage = status;
+        if (status.includes("timeout")) {
+          errorMessage = "Upload timed out. Check your connection and try again.";
+        } else if (status.includes("network")) {
+          errorMessage = "Network error. Please check your internet connection.";
+        } else if (status.includes("413")) {
+          errorMessage = "File is too large. Maximum size is 20GB.";
+        }
+        fileStatus.uploadStatus = { type: "failed", error: errorMessage };
+        updateProduct({});
       }
       return fileEntry;
     });

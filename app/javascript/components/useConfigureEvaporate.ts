@@ -6,6 +6,7 @@ import FileUtils from "$app/utils/file";
 
 const ROOT_BUCKET_NAME = "attachments";
 const MAX_FILE_SIZE = 20 * 1024 * 1024 * 1024; // 20 GB
+const CHUNK_SIZE = 5 * 1024 * 1024; // 5MB chunks for reliability
 
 export type UploadProgress = { percent: number; bitrate: number };
 
@@ -21,6 +22,13 @@ export const useConfigureEvaporate = (props: Props) => {
         bucket,
         fetchCurrentServerTimeUrl: Routes.s3_utility_current_utc_time_string_path(),
         maxFileSize: MAX_FILE_SIZE,
+        partSize: CHUNK_SIZE,
+        maxRetries: 5,
+        maxRetryBackoffSecs: 300,
+        allowS3ExistenceOptimization: true,
+        computeContentMd5: true,
+        aws4: true,
+        logging: true,
       }),
     [props.aws_access_key_id, bucket],
   );
